@@ -47,14 +47,23 @@ export async function Brands() {
         {brands.map((b) => (
           <Link key={b.id} href={`/urunlerimiz?marka=${b.slug}`} className="group relative block overflow-hidden rounded-3xl">
             <div className="relative aspect-square w-full">
-              <Image
-                src={(b as any).logoUrl || `/brands/${b.slug}.jpg`}
-                alt={b.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 33vw"
-                className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                priority={false}
-              />
+              {(b as any).logoUrl ? (
+                <Image
+                  src={(b as any).logoUrl}
+                  alt={b.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                  priority={false}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gray-100">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-400">{b.name}</div>
+                    <div className="mt-2 text-sm text-gray-500">Logo yüklenmemiş</div>
+                  </div>
+                </div>
+              )}
               <div className="absolute bottom-3 left-3">
                 <span className="inline-flex items-center gap-1 rounded-xl border border-white/80 bg-white/80 px-3 py-1 text-xs font-semibold text-emerald-900 backdrop-blur group-hover:bg-white">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
