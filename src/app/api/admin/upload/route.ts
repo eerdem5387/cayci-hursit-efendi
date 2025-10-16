@@ -17,6 +17,11 @@ export async function POST(req: NextRequest) {
 
     if (!file || !kind || !slug) return NextResponse.json({ ok: false, error: "Eksik alan" }, { status: 400 });
 
+    // Üretimde (Vercel) dosya sistemi yazılabilir değil. Object storage entegrasyonu yoksa engelle.
+    if (process.env.VERCEL) {
+        return NextResponse.json({ ok: false, error: "Üretimde görsel yükleme desteklenmiyor. Lütfen görselleri public klasörüne ekleyip redeploy edin ya da bir obje depolama (S3 vb.) entegre edin." }, { status: 400 });
+    }
+
     const bytes = Buffer.from(await file.arrayBuffer());
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const subdir = kind === "brand" ? "brands" : "images";
