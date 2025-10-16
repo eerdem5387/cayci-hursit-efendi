@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import path from "path";
 import fs from "fs";
-import { uploadBufferToS3 } from "@/lib/s3";
+import { put } from "@vercel/blob";
 
 export const runtime = "nodejs";
 
@@ -23,16 +23,10 @@ export async function POST(req: NextRequest) {
     const subdir = kind === "brand" ? "brands" : "images";
     const rel = `${subdir}/${slug}.${ext}`;
 
-    // Eğer S3 env'leri tanımlıysa S3'e yükle, değilse local FS (dev) kullan
-    if (process.env.S3_BUCKET && process.env.S3_REGION && process.env.S3_ACCESS_KEY_ID && process.env.S3_SECRET_ACCESS_KEY) {
-        const url = await uploadBufferToS3({
-            bucket: process.env.S3_BUCKET!,
-            key: rel,
-            contentType: file.type || `image/${ext}`,
-            bytes,
-            acl: process.env.S3_ACL || "public-read",
-        });
-        return NextResponse.json({ ok: true, path: url });
+    // Vercel Blob varsa onu kullan
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+        const blob = await put(rel, bytes, { access: "public", contentType: file.type || `image/${ext}` });
+        return NextResponse.json({ ok: true, path: blob.url });
     }
 
     // Local/dev fallback
