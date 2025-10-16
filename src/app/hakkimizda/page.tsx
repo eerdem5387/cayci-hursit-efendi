@@ -1,36 +1,10 @@
-"use client";
-import { motion } from "framer-motion";
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-    },
-  },
-};
+import ScrollAnimation from "@/components/ScrollAnimation";
 
 export default function AboutPage() {
   return (
-    <motion.div
-      className="mx-auto max-w-7xl px-4 py-10 md:px-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={itemVariants} className="grid items-start gap-8 md:grid-cols-2">
+    <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
+      <ScrollAnimation>
+        <div className="grid items-start gap-8 md:grid-cols-2">
         <div className="overflow-hidden rounded-3xl">
           <img src="/cay-banner.jpg" alt="Çay tarlası" className="w-full h-auto object-contain" />
         </div>
@@ -48,9 +22,12 @@ export default function AboutPage() {
             <p>Gelenekten ilham alan bu özel marka, Rize’nin eşsiz doğasından gelen çayların en rafine haliyle buluştuğu bir lezzet yolculuğudur. 100% tarım onaylı olan Çaycı Hurşit Efendi, Sakaoğlu Çay’ın yıllar süren deneyimi ve kalite anlayışının bir yansıması olarak, kusursuz bir şekilde sizlerin beğenisine sunulmuştur.</p>
           </div>
         </div>
-      </motion.div>
+        </div>
+      </ScrollAnimation>
+      
       {/* features */}
-      <motion.section variants={itemVariants} className="mt-16 rounded-3xl bg-[#F5F6F5] px-4 py-10 md:px-10">
+      <ScrollAnimation delay={200}>
+        <section className="mt-16 rounded-3xl bg-[#F5F6F5] px-4 py-10 md:px-10">
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 text-center md:grid-cols-3">
           <div className="space-y-3">
             <div className="mx-auto h-14 w-14">
@@ -74,10 +51,12 @@ export default function AboutPage() {
             <p className="text-gray-600">Tamamen yerli sermaye ile üretim yaparak, ülke ekonomisine katkı sağlamak ve milli değerleri desteklemek.</p>
           </div>
         </div>
-      </motion.section>
+        </section>
+      </ScrollAnimation>
 
       {/* mission & vision */}
-      <motion.section variants={itemVariants} className="mx-auto mt-16 max-w-7xl px-0 md:px-0">
+      <ScrollAnimation delay={400}>
+        <section className="mx-auto mt-16 max-w-7xl px-0 md:px-0">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Mission */}
           <div className="relative overflow-hidden rounded-3xl" style={{ aspectRatio: '695 / 853' }}>
@@ -99,8 +78,9 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-      </motion.section>
-    </motion.div>
+        </section>
+      </ScrollAnimation>
+    </div>
   );
 }
 

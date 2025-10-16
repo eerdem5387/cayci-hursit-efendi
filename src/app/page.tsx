@@ -1,4 +1,5 @@
 import Slider from "@/components/Slider";
+import ScrollAnimation from "@/components/ScrollAnimation";
 import { PopularTeas, Brands, AboutTeaser, Pillars, VideoBanner } from "@/components/Sections";
 
 export default function Home() {
@@ -7,21 +8,21 @@ export default function Home() {
       <div className="animate-fade-in">
         <Slider />
       </div>
-      <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+      <ScrollAnimation delay={200}>
         <PopularTeas />
-      </div>
-      <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
+      </ScrollAnimation>
+      <ScrollAnimation delay={400}>
         <Brands />
-      </div>
-      <div className="animate-fade-in" style={{ animationDelay: '0.6s' }}>
+      </ScrollAnimation>
+      <ScrollAnimation delay={600}>
         <AboutTeaser />
-      </div>
-      <div className="animate-fade-in" style={{ animationDelay: '0.8s' }}>
+      </ScrollAnimation>
+      <ScrollAnimation delay={800}>
         <Pillars />
-      </div>
-      <div className="animate-fade-in" style={{ animationDelay: '1.0s' }}>
+      </ScrollAnimation>
+      <ScrollAnimation delay={1000}>
         <VideoBanner />
-      </div>
+      </ScrollAnimation>
     </div>
   );
 }
