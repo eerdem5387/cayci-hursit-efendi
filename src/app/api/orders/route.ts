@@ -72,8 +72,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, orderId: created.id });
 }
 
-export async function GET() {
-    const orders = await prisma.order.findMany({ include: { items: true }, orderBy: { createdAt: "desc" } });
+export async function GET(req: NextRequest) {
+    const { searchParams } = new URL(req.url);
+    const q = (searchParams.get("q") || "").toLowerCase();
+    const status = searchParams.get("status");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const pageSize = Math.min(50, Math.max(1, parseInt(searchParams.get("pageSize") || "10", 10)));
+
+    const where: any = {};
+    if (status) where.status = status;
+    if (q) {
+        where.OR = [
+            { id: { contains: q } },
+            { customerName: { contains: q } },
+            { customerEmail: { contains: q } },
+            { customerTelefon: { contains: q } },
+        ];
+    }
+
+    const [total, orders] = await Promise.all([
+        prisma.order.count({ where }),
+        prisma.order.findMany({ where, include: { items: true }, orderBy: { createdAt: "desc" }, skip: (page - 1) * pageSize, take: pageSize }),
+    ]);
+
     const normalized = orders.map((o) => ({
         id: o.id,
         createdAt: o.createdAt,
@@ -83,7 +104,7 @@ export async function GET() {
         total: o.total,
         customerName: o.customerName,
     }));
-    return NextResponse.json(normalized);
+    return NextResponse.json({ items: normalized, total, page, pageSize });
 }
 
 export async function PUT(req: NextRequest) {

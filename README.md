@@ -52,6 +52,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Vercel’e Deploy
 
+### Postgres’e Geçiş (Prod)
+
+1) Vercel / DB sağlayıcınızda Postgres oluşturun ve `DATABASE_URL`’ı ayarlayın.
+2) `prisma/schema.postgres.prisma` şemasını `prisma/schema.prisma` üstüne kopyalayın veya datasource provider’ı `postgresql` yapın.
+3) `npx prisma migrate deploy` çalıştırın (CI/CD’de).
+4) Uygulamayı redeploy edin.
+
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

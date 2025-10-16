@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  customer
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role
+  createdAt DateTime @default(now())
+  googleId  String?  @unique
+  password  String?
+}
+
+model Brand {
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
+  products Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  price       Float
+  popular     Boolean  @default(false)
+  description String   @default("")
+  weightKg    Float?
+  stock       Int?     @default(0)
+  images      Json?
+  brandId     String?
+  brand       Brand?   @relation(fields: [brandId], references: [id])
+}
+
+model Order {
+  id            String     @id @default(cuid())
+  createdAt     DateTime   @default(now())
+  customerAd    String
+  customerEmail String
+  customerAdres String
+  customerSehir String
+  customerTelefon String
+  status        String     @default("pending")
+  total         Float      @default(0)
+  customerName  String
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id       String  @id @default(cuid())
+  orderId  String
+  slug     String
+  qty      Int
+  order    Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model CartItem {
+  id    String @id @default(cuid())
+  slug  String
+  qty   Int
+}

@@ -20,10 +20,15 @@ export default function OrdersAdmin() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const load = () => {
-    fetch("/api/orders").then((r) => r.json()).then(setOrders);
+    const params = new URLSearchParams();
+    if (query.trim()) params.set("q", query.trim());
+    if (statusFilter) params.set("status", statusFilter);
+    params.set("page", String(page));
+    params.set("pageSize", String(pageSize));
+    fetch(`/api/orders?${params.toString()}`).then((r) => r.json()).then((res) => setOrders(res.items));
     fetch("/api/products").then((r) => r.json()).then(setProducts);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [query, statusFilter, page]);
 
   const setStatus = async (id: string, status: Order["status"]) => {
     await fetch("/api/orders", { method: "PUT", body: JSON.stringify({ id, status }) });
@@ -53,12 +58,7 @@ export default function OrdersAdmin() {
         </div>
       </div>
       <div className="grid gap-3">
-        {orders.filter((o) => {
-          const q = query.trim().toLowerCase();
-          const matchesQuery = !q || o.id.toLowerCase().includes(q) || o.customer.ad.toLowerCase().includes(q) || o.customer.email.toLowerCase().includes(q) || o.customer.telefon.toLowerCase().includes(q);
-          const matchesStatus = !statusFilter || o.status === statusFilter;
-          return matchesQuery && matchesStatus;
-        }).slice((page-1)*pageSize, page*pageSize).map((o) => (
+        {orders.map((o) => (
           <div key={o.id} className="rounded border border-gray-200 bg-white p-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-600">#{o.id} – {new Date(o.createdAt).toLocaleString("tr-TR")} – <Link className="text-emerald-700" href={`/admin/siparisler/${o.id}`}>Detay</Link></div>
