@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import { readJson } from "@/lib/store";
-
-type Product = { id: string; name: string; slug: string; brandId?: string; price: number };
+import { prisma } from "@/lib/db";
 
 export async function GET() {
-    const products = readJson<Product[]>("products.json", []);
+    const products = await prisma.product.findMany({ orderBy: { name: "asc" } });
     return NextResponse.json(products);
 }
 
