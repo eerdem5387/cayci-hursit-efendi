@@ -26,6 +26,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 - `NEXTAUTH_URL`, `NEXTAUTH_SECRET` zorunlu.
 - `NEXT_PUBLIC_SITE_URL` SEO ve link üretimi için önerilir.
+- `DATABASE_URL` (SQLite için `file:./dev.db` önerilir).
 - Google OAuth opsiyoneldir: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` sağlanırsa aktif olur.
 - SMTP ayarları e-posta bildirimleri için.
 - Ziraat POS alanları opsiyoneldir.

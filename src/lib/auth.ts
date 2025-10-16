@@ -3,7 +3,7 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
-import { readJson, writeJson, generateId } from "./store";
+import { prisma } from "./db";
 
 export type User = {
     id: string;
@@ -39,34 +39,13 @@ providers.push(
                 return null;
             }
 
-            const users = readJson<User[]>("users.json", []);
-            const user = users.find((u) => u.email === credentials.email);
-
-            if (!user) {
-                return null;
-            }
-
-            // Google kullanıcıları için şifre kontrolü yapma
-            if (user.googleId) {
-                return null;
-            }
-
-            // Şifre kontrolü
-            if (!user.password || typeof user.password !== 'string') {
-                return null;
-            }
-            const isValid = await bcrypt.compare(String(credentials.password), String(user.password));
-
-            if (!isValid) {
-                return null;
-            }
-
-            return {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-            };
+                const dbUser = await prisma.user.findUnique({ where: { email: credentials.email } });
+                if (!dbUser) return null;
+                if (dbUser.googleId) return null; // Google ile kayıtlı kullanıcı şifreyle giriş yapamaz
+                if (!dbUser.password) return null;
+                const isValid = await bcrypt.compare(String(credentials.password), String(dbUser.password));
+                if (!isValid) return null;
+                return { id: dbUser.id, email: dbUser.email, name: dbUser.name, role: dbUser.role } as any;
         },
     })
 );
@@ -76,34 +55,24 @@ export const authOptions: NextAuthConfig = {
     callbacks: {
         async signIn({ user, account, profile }: any) {
             if (account?.provider === "google") {
-                const users = readJson<User[]>("users.json", []);
-                let existingUser = users.find((u) => u.email === user.email);
-
-                if (!existingUser) {
-                    // Yeni Google kullanıcısı oluştur
-                    const newUser: User = {
-                        id: generateId("user"),
-                        email: user.email!,
-                        name: user.name!,
-                        role: "customer",
-                        createdAt: new Date().toISOString(),
-                        googleId: account.providerAccountId,
-                        password: "",
-                    };
-                    users.push(newUser);
-                    writeJson("users.json", users);
-                } else if (!existingUser.googleId) {
-                    // Mevcut kullanıcıya Google ID ekle
-                    existingUser.googleId = account.providerAccountId;
-                    writeJson("users.json", users);
+                const existing = await prisma.user.findUnique({ where: { email: user.email! } });
+                if (!existing) {
+                    await prisma.user.create({
+                        data: {
+                            email: user.email!,
+                            name: user.name || user.email!,
+                            role: "customer",
+                            googleId: account.providerAccountId,
+                        },
+                    });
+                } else if (!existing.googleId) {
+                    await prisma.user.update({ where: { id: existing.id }, data: { googleId: account.providerAccountId } });
                 }
             }
             return true;
         },
         async jwt({ token, user, account }: any) {
-            if (user) {
-                token.role = user.role;
-            }
+            if (user) token.role = (user as any).role;
             return token;
         },
         async session({ session, token }: any) {
