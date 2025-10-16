@@ -1,47 +1,47 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextResponse, type NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export default auth((req) => {
-    const { pathname, origin, search } = req.nextUrl;
+export default async function middleware(req: NextRequest) {
+  const { pathname, origin, search } = req.nextUrl;
 
+  // Allow initial admin setup
   if (pathname === "/admin/setup") {
-    const res = NextResponse.next();
-    res.headers.set("x-middleware", "active");
-    return res;
-        const res = NextResponse.next();
-        res.headers.set("x-middleware", "active");
-        return res;
-    }
+    return NextResponse.next();
+  }
 
+  const token = await getToken({ req });
+  const isAuthenticated = !!token;
+  const role = (token as any)?.role as string | undefined;
+
+  // Protect admin
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    const role = (req.auth?.user as any)?.role;
-    const hasUser = !!(req.auth && (req.auth.user as any)?.email);
-    if (!hasUser) {
-            const url = new URL(`/auth/signin?callbackUrl=${encodeURIComponent(pathname + (search || ""))}`, origin);
-            return NextResponse.redirect(url);
-        }
+    if (!isAuthenticated) {
+      return NextResponse.redirect(
+        new URL(`/auth/signin?callbackUrl=${encodeURIComponent(pathname + (search || ""))}`, origin)
+      );
+    }
     if (role !== "admin") {
-            return NextResponse.redirect(new URL("/", origin));
-        }
+      return NextResponse.redirect(new URL("/", origin));
     }
+    return NextResponse.next();
+  }
 
-    if (
-        pathname === "/profil" ||
-        pathname.startsWith("/profil/") ||
-        pathname === "/siparislerim" ||
-        pathname.startsWith("/siparislerim/")
+  // Require login for member areas
+  if (
+    pathname === "/profil" ||
+    pathname.startsWith("/profil/") ||
+    pathname === "/siparislerim" ||
+    pathname.startsWith("/siparislerim/")
   ) {
-    const hasUser = !!(req.auth && (req.auth.user as any)?.email);
-    if (!hasUser) {
-            const url = new URL(`/auth/signin?callbackUrl=${encodeURIComponent(pathname + (search || ""))}`, origin);
-            return NextResponse.redirect(url);
-        }
+    if (!isAuthenticated) {
+      return NextResponse.redirect(
+        new URL(`/auth/signin?callbackUrl=${encodeURIComponent(pathname + (search || ""))}`, origin)
+      );
     }
+  }
 
-  const res = NextResponse.next();
-  res.headers.set("x-middleware", "active");
-  return res;
-});
+  return NextResponse.next();
+}
 
 export const config = {
     matcher: [
