@@ -8,6 +8,7 @@ type Product = { id: string; name: string; slug: string; brandId?: string; price
 export default function ProductsAdmin() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [orderMap, setOrderMap] = useState<Record<string, number>>({});
   const [query, setQuery] = useState("");
   const [filterBrand, setFilterBrand] = useState("");
   const [page, setPage] = useState(1);
@@ -19,7 +20,8 @@ export default function ProductsAdmin() {
 
   const load = () => Promise.all([
     fetch("/api/admin/brands").then((r) => r.json()).then(setBrands),
-    fetch("/api/admin/products").then((r) => r.json()).then(setProducts),
+    fetch("/api/admin/products").then((r) => r.json()).then((list: Product[]) => setProducts(list)),
+    fetch("/api/admin/products/order").then((r) => r.json()).then((d) => setOrderMap(d?.map || {})),
   ]);
   useEffect(() => { load(); }, []);
 
@@ -121,14 +123,16 @@ export default function ProductsAdmin() {
               <div className="flex items-center gap-2">
                 <button 
                   className="inline-flex items-center gap-1 rounded border border-gray-300 px-2 py-1 text-sm"
-                  onClick={() => {
-                    const newOrder = prompt(`Sıralama numarası (${p.order || 0}):`, String(p.order || 0));
-                    if (newOrder !== null) {
-                      const order = Number(newOrder);
-                      if (!isNaN(order)) {
-                        update({ ...p, order });
-                      }
-                    }
+                  onClick={async () => {
+                    const current = typeof orderMap[p.id] === 'number' ? orderMap[p.id] : 0;
+                    const newOrderStr = prompt(`Sıralama numarası (${current}):`, String(current));
+                    if (newOrderStr === null) return;
+                    const order = Number(newOrderStr);
+                    if (Number.isNaN(order)) return;
+                    await fetch('/api/admin/products/order', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: p.id, order }) });
+                    setOrderMap((m) => ({ ...m, [p.id]: order }));
+                    // Reload list to reflect new ordering
+                    await load();
                   }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>

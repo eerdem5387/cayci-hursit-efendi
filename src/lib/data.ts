@@ -43,7 +43,9 @@ export async function getBrands(): Promise<Brand[]> {
 export async function getProducts(): Promise<Product[]> {
     noStore();
     const rows = await prisma.product.findMany({ orderBy: { name: "asc" } });
-    return rows.map((r: any) => ({
+    const orderRow = await prisma.settingKV.findUnique({ where: { key: "productOrderMap" } });
+    const orderMap = ((orderRow?.value as any) || {}) as Record<string, number>;
+    const mapped = rows.map((r: any) => ({
         id: r.id,
         name: r.name,
         slug: r.slug,
@@ -53,9 +55,15 @@ export async function getProducts(): Promise<Product[]> {
         description: r.description ?? "",
         weightKg: r.weightKg ?? null,
         stock: r.stock ?? null,
-        order: r.order ?? undefined,
+        order: typeof orderMap[r.id] === "number" ? orderMap[r.id] : undefined,
         images: Array.isArray(r.images) ? (r.images as string[]) : undefined,
     })) as Product[];
+    return mapped.sort((a: any, b: any) => {
+        const ao = typeof a.order === "number" ? a.order : Number.MAX_SAFE_INTEGER;
+        const bo = typeof b.order === "number" ? b.order : Number.MAX_SAFE_INTEGER;
+        if (ao !== bo) return ao - bo;
+        return String(a.name).localeCompare(String(b.name), "tr-TR");
+    });
 }
 
 export async function getHome(): Promise<HomeContent> {
