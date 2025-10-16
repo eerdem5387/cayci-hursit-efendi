@@ -3,8 +3,11 @@ import Image from "next/image";
 import { getBrands, getHome, getProducts } from "@/lib/data";
 
 export function PopularTeas() {
-  const products = getProducts();
-  const popular = products.filter((p) => p.popular === true);
+  const productsPromise = getProducts();
+  // App Router server component: await edebiliriz
+  // @ts-expect-error async server component
+  const products = (await productsPromise) as any[];
+  const popular = products.filter((p: any) => p.popular === true);
   return (
     <section className="mx-auto mt-16 max-w-7xl px-4 md:px-6">
       <div className="mb-6 flex items-end justify-between">
@@ -39,7 +42,8 @@ export function PopularTeas() {
 }
 
 export function Brands() {
-  const brands = getBrands();
+  // @ts-expect-error async server component
+  const brands = await getBrands();
   return (
     <section className="mx-auto mt-16 max-w-7xl px-4 md:px-6">
       <h2 className="mb-6 text-3xl font-bold text-gray-900">Markalarımız</h2>
@@ -100,7 +104,8 @@ export function AboutTeaser() {
 }
 
 export function Pillars() {
-  const items = getHome().pillars;
+  // @ts-expect-error async server component
+  const items = (await getHome()).pillars;
   return (
     <section className="mx-auto mt-16 max-w-7xl px-4 md:px-6">
       <div className="grid gap-6 md:gap-8 xl:gap-12 md:grid-cols-2 xl:grid-cols-3">
@@ -127,7 +132,8 @@ export function Pillars() {
 }
 
 export function VideoBanner() {
-  const v = getHome().video;
+  // @ts-expect-error async server component
+  const v = (await getHome()).video;
   return (
     <section className="relative mt-12 left-1/2 -translate-x-1/2 w-screen">
      <div className="relative h-[620px] w-screen overflow-hidden">

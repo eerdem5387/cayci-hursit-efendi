@@ -1,4 +1,4 @@
-import { readJson } from "@/lib/store";
+import { prisma } from "@/lib/db";
 
 export type Brand = { id: string; name: string; slug: string };
 export type Product = {
@@ -26,29 +26,22 @@ export type HomeContent = {
     video: { src: string; overlayTitle: string; overlaySubtitle: string; overlayText: string };
 };
 
-export function getBrands(): Brand[] {
-    return readJson<Brand[]>("brands.json", []);
+export async function getBrands(): Promise<Brand[]> {
+    return prisma.brand.findMany({ orderBy: { name: "asc" } });
 }
 
-export function getProducts(): Product[] {
-    return readJson<Product[]>("products.json", []);
+export async function getProducts(): Promise<Product[]> {
+    return prisma.product.findMany({ orderBy: { name: "asc" } });
 }
 
-export function getHome(): HomeContent {
-    return readJson<HomeContent>("home.json", {
-        popularIds: [],
-        pillars: [],
-        video: { src: "/hero.mp4", overlayTitle: "", overlaySubtitle: "", overlayText: "" },
-    });
+export async function getHome(): Promise<HomeContent> {
+    const row = await prisma.homeContentKV.findUnique({ where: { id: 1 } });
+    return (row?.value as any) || { popularIds: [], pillars: [], video: { src: "/hero.mp4", overlayTitle: "", overlaySubtitle: "", overlayText: "" } };
 }
 
-export function getSettings(): Settings {
-    return readJson<Settings>("settings.json", {
-        site: { title: "Çaycı Hurşit Efendi", description: "Gerçek çay tadı" },
-        smtp: { host: "", port: 587, user: "", pass: "", from: "" },
-        notifications: { adminEmail: "" },
-        payments: { ziraatPos: {} },
-    });
+export async function getSettings(): Promise<Settings> {
+    const row = await prisma.settingKV.findUnique({ where: { key: "settings" } });
+    return (row?.value as any) || { site: { title: "Çaycı Hurşit Efendi", description: "Gerçek çay tadı" }, smtp: { host: "", port: 587, user: "", pass: "", from: "" }, notifications: { adminEmail: "" }, payments: { ziraatPos: {} } };
 }
 
 
