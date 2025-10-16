@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { unstable_noStore as noStore } from "next/cache";
 
 export type Brand = { id: string; name: string; slug: string };
 export type Product = {
@@ -27,10 +28,12 @@ export type HomeContent = {
 };
 
 export async function getBrands(): Promise<Brand[]> {
+    noStore();
     return prisma.brand.findMany({ orderBy: { name: "asc" } });
 }
 
 export async function getProducts(): Promise<Product[]> {
+    noStore();
     const rows = await prisma.product.findMany({ orderBy: { name: "asc" } });
     return rows.map((r: any) => ({
         id: r.id,
@@ -48,11 +51,13 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function getHome(): Promise<HomeContent> {
+    noStore();
     const row = await prisma.homeContentKV.findUnique({ where: { id: 1 } });
     return (row?.value as any) || { popularIds: [], pillars: [], video: { src: "/hero.mp4", overlayTitle: "", overlaySubtitle: "", overlayText: "" } };
 }
 
 export async function getSettings(): Promise<Settings> {
+    noStore();
     const row = await prisma.settingKV.findUnique({ where: { key: "settings" } });
     return (row?.value as any) || { site: { title: "Çaycı Hurşit Efendi", description: "Gerçek çay tadı" }, smtp: { host: "", port: 587, user: "", pass: "", from: "" }, notifications: { adminEmail: "" }, payments: { ziraatPos: {} } };
 }
