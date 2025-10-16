@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
             popular: !!body.popular,
             description: body.description || "",
             weightKg: typeof body.weightKg === "number" ? body.weightKg : body.weightKg == null ? null : Number(body.weightKg),
-            stock: typeof body.stock === "number" ? body.stock : 0,
+            stock: typeof body.stock === "number" ? body.stock : null,
             images: Array.isArray(body.images) ? (body.images as any) : [],
         },
     });
@@ -71,7 +71,7 @@ export async function PUT(req: NextRequest) {
             popular: body.popular ?? found.popular,
             description: body.description ?? found.description,
             weightKg: body.weightKg ?? found.weightKg,
-            stock: typeof body.stock === "number" ? body.stock : found.stock,
+            stock: typeof body.stock === "number" ? body.stock : body.stock === null ? null : found.stock,
             images: Array.isArray(body.images) ? (body.images as any) : found.images,
         },
     });
