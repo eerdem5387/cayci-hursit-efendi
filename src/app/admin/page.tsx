@@ -179,7 +179,7 @@ export default function AdminHome() {
               </svg>
             </div>
           </div>
-          {kpi?.lowStock > 0 && (
+          {(kpi?.lowStock ?? 0) > 0 && (
             <Link href="/admin/urunler" className="text-red-100 text-sm hover:text-white transition-colors">
               Stok Kontrolü →
             </Link>
