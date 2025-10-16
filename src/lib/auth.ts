@@ -15,13 +15,20 @@ export type User = {
     password?: string;
 };
 
-export const authOptions: NextAuthConfig = {
-    providers: [
+const providers = [] as any[];
+
+// Google sağlayıcısını yalnızca gerekli env değerleri varsa ekle
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    providers.push(
         GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID || "",
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-        }),
-        CredentialsProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        })
+    );
+}
+
+providers.push(
+    CredentialsProvider({
             name: "credentials",
             credentials: {
                 email: { label: "Email", type: "email" },
@@ -61,8 +68,11 @@ export const authOptions: NextAuthConfig = {
                     role: user.role,
                 };
             },
-        }),
-    ],
+        })
+);
+
+export const authOptions: NextAuthConfig = {
+    providers,
     callbacks: {
         async signIn({ user, account, profile }: any) {
             if (account?.provider === "google") {

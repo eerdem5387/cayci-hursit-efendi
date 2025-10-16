@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readJson, writeJson } from "@/lib/store";
+import { auth } from "@/lib/auth";
 
 type Settings = {
     site: { title: string; description: string };
@@ -16,11 +17,19 @@ const DEFAULTS: Settings = {
 };
 
 export async function GET() {
+    const session = await auth();
+    if (!session || (session.user as any)?.role !== "admin") {
+        return NextResponse.json({ ok: false, error: "Yetkisiz" }, { status: 401 });
+    }
     const settings = readJson<Settings>("settings.json", DEFAULTS);
     return NextResponse.json(settings);
 }
 
 export async function PUT(req: NextRequest) {
+    const session = await auth();
+    if (!session || (session.user as any)?.role !== "admin") {
+        return NextResponse.json({ ok: false, error: "Yetkisiz" }, { status: 401 });
+    }
     const incoming = (await req.json().catch(() => null)) as Partial<Settings> | null;
     if (!incoming) return NextResponse.json({ ok: false }, { status: 400 });
     const current = readJson<Settings>("settings.json", DEFAULTS);

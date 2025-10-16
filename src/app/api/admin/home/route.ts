@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readJson, writeJson } from "@/lib/store";
+import { auth } from "@/lib/auth";
 
 type HomeContent = {
     popularIds: string[];
@@ -23,11 +24,19 @@ const DEFAULTS: HomeContent = {
 };
 
 export async function GET() {
+    const session = await auth();
+    if (!session || (session.user as any)?.role !== "admin") {
+        return NextResponse.json({ ok: false, error: "Yetkisiz" }, { status: 401 });
+    }
     const home = readJson<HomeContent>("home.json", DEFAULTS);
     return NextResponse.json(home);
 }
 
 export async function PUT(req: NextRequest) {
+    const session = await auth();
+    if (!session || (session.user as any)?.role !== "admin") {
+        return NextResponse.json({ ok: false, error: "Yetkisiz" }, { status: 401 });
+    }
     const body = (await req.json().catch(() => null)) as Partial<HomeContent> | null;
     if (!body) return NextResponse.json({ ok: false }, { status: 400 });
     const current = readJson<HomeContent>("home.json", DEFAULTS);

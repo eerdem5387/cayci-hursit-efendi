@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  if (!session || (session.user as any)?.role !== "admin") {
+    redirect("/");
+  }
   return (
     <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 gap-6 px-4 py-8 md:grid-cols-[240px_1fr] md:px-6">
       <aside className="rounded-lg border border-gray-200 bg-white p-4">
@@ -15,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin/markalar" className="inline-flex items-center gap-2 rounded px-2 py-1 hover:bg-emerald-50"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M21 15l-9 4-9-4"/><path d="M21 11l-9 4-9-4"/></svg> Markalar</Link>
           <Link href="/admin/anasayfa" className="inline-flex items-center gap-2 rounded px-2 py-1 hover:bg-emerald-50"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg> Anasayfa İçerikleri</Link>
           <Link href="/admin/siparisler" className="inline-flex items-center gap-2 rounded px-2 py-1 hover:bg-emerald-50"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Siparişler</Link>
-          <form action="/api/admin/logout" method="post" className="mt-4">
+          <form action="/api/auth/signout" method="post" className="mt-4">
             <button className="inline-flex w-full items-center gap-2 rounded border border-gray-300 px-2 py-1 text-left text-red-700 hover:bg-red-50"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Çıkış Yap</button>
           </form>
         </nav>

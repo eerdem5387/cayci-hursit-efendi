@@ -23,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${settings.site.title}`,
     },
     description: settings.site.description,
-    metadataBase: new URL("https://caycihursitefendi.com"),
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   };
 }
 
