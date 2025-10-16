@@ -76,7 +76,7 @@ export default function SettingsPage() {
       </section>
 
       <div className="flex items-center gap-3">
-        <button onClick={save} disabled={saving} className="rounded-md bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800 disabled:opacity-60">
+        <button onClick={save} disabled={saving} className="rounded-md bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800 disabled:opacity-60 transition-transform active:scale-95">
           {saving ? "Kaydediliyor..." : "Kaydet"}
         </button>
         {message && <span className={`text-sm ${message === "Kaydedildi" ? "text-emerald-700" : "text-red-700"}`}>{message}</span>}

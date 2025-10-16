@@ -92,7 +92,7 @@ export default function HomeAdmin() {
       </section>
 
       <div className="flex items-center gap-3">
-        <button className="rounded bg-emerald-700 px-4 py-2 text-white disabled:opacity-60" onClick={save} disabled={saving}> {saving ? "Kaydediliyor..." : "Kaydet"} </button>
+        <button className="rounded bg-emerald-700 px-4 py-2 text-white disabled:opacity-60 transition-transform active:scale-95" onClick={save} disabled={saving}> {saving ? "Kaydediliyor..." : "Kaydet"} </button>
         {message && <span className={`text-sm ${message === "Kaydedildi" ? "text-emerald-700" : "text-red-700"}`}>{message}</span>}
       </div>
     </div>

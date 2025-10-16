@@ -10,6 +10,7 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
   const [brands, setBrands] = useState<Brand[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 
   useEffect(() => {
@@ -92,10 +93,12 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
             e.preventDefault();
             const formEl = e.currentTarget as HTMLFormElement;
             const f = new FormData(formEl);
+            setUploading(true);
             const resp = await fetch("/api/admin/upload", { method: "POST", body: f });
             if (!resp.ok) {
               const er = await resp.json().catch(() => ({} as any));
               alert(er?.error || "Görsel yüklenemedi");
+              setUploading(false);
               return;
             }
             const data = await resp.json().catch(() => ({} as any));
@@ -103,6 +106,7 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
               setProduct((prev) => prev ? { ...prev, images: Array.isArray(prev.images) ? [...prev.images, data.path] : [data.path] } : prev);
             }
             formEl.reset();
+            setUploading(false);
           }}>
             <input type="hidden" name="kind" value="product" />
             <input type="hidden" name="slug" value={product.slug} />
@@ -121,8 +125,8 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
                 <span>Görsel seçmek için tıklayın</span>
               </div>
             </div>
-            <button type="submit" className="w-full rounded bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800">
-              Görseli Yükle
+            <button type="submit" className="w-full rounded bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800 disabled:opacity-60 transition-transform active:scale-95" disabled={uploading}>
+              {uploading ? 'Yükleniyor…' : 'Görseli Yükle'}
             </button>
           </form>
           {Array.isArray(product.images) && product.images.length > 0 && (
@@ -146,7 +150,7 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
           )}
         </div>
         <div className="mt-4">
-          <button disabled={saving} onClick={save} className="rounded bg-emerald-700 px-4 py-2 text-white disabled:opacity-60">{saving ? "Kaydediliyor..." : "Kaydet"}</button>
+          <button disabled={saving} onClick={save} className="rounded bg-emerald-700 px-4 py-2 text-white disabled:opacity-60 transition-transform active:scale-95">{saving ? "Kaydediliyor..." : "Kaydet"}</button>
         </div>
       </div>
     </div>

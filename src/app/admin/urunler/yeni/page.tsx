@@ -7,6 +7,7 @@ type Brand = { id: string; name: string; slug: string };
 export default function ProductCreatePage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [form, setForm] = useState({ name: "", slug: "", brandId: "", price: "", weightKg: "", stock: "", description: "", popular: false });
+  const [busy, setBusy] = useState<{save?: boolean; upload?: boolean}>({});
   const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 
   useEffect(() => {
@@ -15,6 +16,7 @@ export default function ProductCreatePage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setBusy((b) => ({ ...b, save: true }));
     const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
     const name = String(form.name || "").trim();
     const slug = slugify(String(form.name || ""));
@@ -32,6 +34,7 @@ export default function ProductCreatePage() {
     if (!res.ok) {
       const data = await res.json().catch(() => ({} as any));
       alert(data?.error || "Ürün eklenemedi");
+      setBusy((b) => ({ ...b, save: false }));
       return;
     }
     window.location.href = "/admin/urunler";
@@ -41,15 +44,18 @@ export default function ProductCreatePage() {
     e.preventDefault();
     const formEl = e.currentTarget as HTMLFormElement;
     const f = new FormData(formEl);
+    setBusy((b) => ({ ...b, upload: true }));
     const res = await fetch("/api/admin/upload", { method: "POST", body: f });
     if (!res.ok) {
       const data = await res.json().catch(() => ({} as any));
       alert(data?.error || "Görsel yüklenemedi");
+      setBusy((b) => ({ ...b, upload: false }));
       return;
     }
     const data = await res.json().catch(() => ({} as any));
     if (data?.path) alert(`Yüklendi: ${data.path}`);
     formEl.reset();
+    setBusy((b) => ({ ...b, upload: false }));
   };
 
   return (
@@ -97,7 +103,7 @@ export default function ProductCreatePage() {
           <input type="checkbox" checked={form.popular} onChange={(e) => setForm({ ...form, popular: e.target.checked })} />
           Popüler ürün
         </label>
-        <button className="mt-2 w-fit rounded bg-emerald-700 px-4 py-2 text-white">Kaydet</button>
+        <button className="mt-2 w-fit rounded bg-emerald-700 px-4 py-2 text-white disabled:opacity-60 transition-transform active:scale-95" disabled={!!busy.save}>{busy.save ? 'Kaydediliyor…' : 'Kaydet'}</button>
       </form>
 
       <div className="rounded-lg border border-gray-200 bg-white p-4">
@@ -120,8 +126,8 @@ export default function ProductCreatePage() {
               <span>Görsel seçmek için tıklayın</span>
             </div>
           </div>
-          <button type="submit" className="w-full rounded bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800">
-            Görseli Yükle
+          <button type="submit" className="w-full rounded bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800 disabled:opacity-60 transition-transform active:scale-95" disabled={!!busy.upload}>
+            {busy.upload ? 'Yükleniyor…' : 'Görseli Yükle'}
           </button>
           <div className="text-xs text-gray-500">
             Dosya yolu: <code>/images/{slugify(form.name) || "slug"}.(jpg|png)</code>

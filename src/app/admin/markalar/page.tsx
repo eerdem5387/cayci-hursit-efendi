@@ -7,6 +7,7 @@ export default function BrandsAdmin() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [form, setForm] = useState<Partial<Brand>>({ name: "", slug: "" });
   const [query, setQuery] = useState("");
+  const [busy, setBusy] = useState<{[k:string]: boolean}>({});
 
   const load = () => fetch("/api/admin/brands").then((r) => r.json()).then(setBrands);
   useEffect(() => { load(); }, []);
@@ -14,10 +15,12 @@ export default function BrandsAdmin() {
   const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 
   const create = async () => {
+    setBusy((b) => ({ ...b, create: true }));
     const name = String(form.name || "").trim();
     const slug = slugify(String(form.slug || form.name || ""));
     if (!name || !slug) { alert("Ad ve slug zorunludur"); return; }
     const res = await fetch("/api/admin/brands", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, slug }) });
+    setBusy((b) => ({ ...b, create: false }));
     if (!res.ok) {
       const data = await res.json().catch(() => ({} as any));
       alert(data?.error || "Marka eklenemedi");
@@ -27,10 +30,12 @@ export default function BrandsAdmin() {
     load();
   };
   const update = async (b: Brand) => {
+    setBusy((s) => ({ ...s, ["u:"+b.id]: true }));
     const name = String(b.name || "").trim();
     const slug = slugify(String(b.slug || ""));
     if (!name || !slug) { alert("Ad ve slug zorunludur"); return; }
     const res = await fetch("/api/admin/brands", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...b, name, slug }) });
+    setBusy((s) => ({ ...s, ["u:"+b.id]: false }));
     if (!res.ok) {
       const data = await res.json().catch(() => ({} as any));
       alert(data?.error || "Güncellenemedi");
@@ -38,10 +43,12 @@ export default function BrandsAdmin() {
     load();
   };
   const remove = async (id: string) => {
+    setBusy((s) => ({ ...s, ["d:"+id]: true }));
     const res = await fetch(`/api/admin/brands?id=${id}`, { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({} as any));
       alert(data?.error || "Silinemedi");
+      setBusy((s) => ({ ...s, ["d:"+id]: false }));
       return;
     }
     load();
@@ -58,9 +65,9 @@ export default function BrandsAdmin() {
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <h2 className="mb-2 font-semibold">Yeni Marka</h2>
         <div className="flex gap-2">
-          <input className="flex-1 rounded border border-gray-300 px-3 py-2" placeholder="Ad" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <input className="flex-1 rounded border border-gray-300 px-3 py-2" placeholder="Slug" value={form.slug || ""} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-          <button className="rounded bg-emerald-700 px-4 py-2 text-white" onClick={create}>Ekle</button>
+          <input className={`flex-1 rounded border ${busy.create ? 'border-emerald-400 ring-2 ring-emerald-200' : 'border-gray-300'} px-3 py-2 transition-all`} placeholder="Ad" value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input className={`flex-1 rounded border ${busy.create ? 'border-emerald-400 ring-2 ring-emerald-200' : 'border-gray-300'} px-3 py-2 transition-all`} placeholder="Slug" value={form.slug || ""} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+          <button className="rounded bg-emerald-700 px-4 py-2 text-white disabled:opacity-60 transition-transform active:scale-95" onClick={create} disabled={!!busy.create}>{busy.create ? 'Ekleniyor…' : 'Ekle'}</button>
         </div>
         <form className="mt-3 flex items-center gap-2" onSubmit={async (e) => {
           e.preventDefault();
@@ -89,7 +96,7 @@ export default function BrandsAdmin() {
             <div key={b.id} className="flex items-center gap-2">
               <input className="w-48 rounded border border-gray-300 px-2 py-1" value={b.name} onChange={(e) => update({ ...b, name: e.target.value })} />
               <input className="w-48 rounded border border-gray-300 px-2 py-1" value={b.slug} onChange={(e) => update({ ...b, slug: e.target.value })} />
-              <button className="rounded border border-red-300 px-3 py-1 text-red-700" onClick={() => remove(b.id)}>Sil</button>
+          <button className="rounded border border-red-300 px-3 py-1 text-red-700 disabled:opacity-60 transition-transform active:scale-95" onClick={() => remove(b.id)} disabled={!!busy["d:"+b.id]}>{busy["d:"+b.id] ? 'Siliniyor…' : 'Sil'}</button>
               <form className="ml-auto flex items-center gap-2" onSubmit={async (e) => {
                 e.preventDefault();
                 const formEl = e.currentTarget as HTMLFormElement;
