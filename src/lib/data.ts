@@ -31,7 +31,20 @@ export async function getBrands(): Promise<Brand[]> {
 }
 
 export async function getProducts(): Promise<Product[]> {
-    return prisma.product.findMany({ orderBy: { name: "asc" } });
+    const rows = await prisma.product.findMany({ orderBy: { name: "asc" } });
+    return rows.map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        slug: r.slug,
+        brandId: r.brandId ?? undefined,
+        price: r.price,
+        popular: !!r.popular,
+        description: r.description ?? "",
+        weightKg: r.weightKg ?? null,
+        stock: r.stock ?? null,
+        order: r.order ?? undefined,
+        images: Array.isArray(r.images) ? (r.images as string[]) : undefined,
+    })) as Product[];
 }
 
 export async function getHome(): Promise<HomeContent> {
