@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Ayarlardan Ziraat POS bilgilerini al
-    const settings = getSettings();
+    const settings = await getSettings();
     const { merchantId, terminalId, posUrl } = settings.payments.ziraatPos;
 
     // Ayarlar yapılandırılmamışsa hata döndür
