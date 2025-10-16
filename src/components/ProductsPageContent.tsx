@@ -7,7 +7,7 @@ interface Product {
   name: string;
   slug: string;
   price: number;
-  weightKg?: number;
+  weightKg?: number | null;
   images?: string[];
   brandId?: string;
 }
