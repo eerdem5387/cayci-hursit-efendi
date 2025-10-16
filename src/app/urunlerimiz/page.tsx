@@ -9,7 +9,7 @@ export default async function ProductsPage({ searchParams }: { searchParams?: Pr
   const sp = searchParams ? await searchParams : undefined;
   const brandParam = (sp?.marka as string) || null;
   const brand = (brands as any[]).find((b: any) => b.slug === brandParam) || null;
-  const filtered = ((brand ? (products as any[]).filter((p: any) => p.brandId === (brand as any).id) : (products as any[])) as any[]).sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+  const filtered = (brand ? (products as any[]).filter((p: any) => p.brandId === (brand as any).id) : (products as any[])) as any[];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
