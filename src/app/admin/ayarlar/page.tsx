@@ -11,6 +11,7 @@ type Settings = {
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/settings", { cache: "no-store" })
@@ -21,8 +22,16 @@ export default function SettingsPage() {
   const save = async () => {
     if (!settings) return;
     setSaving(true);
-    await fetch("/api/admin/settings", { method: "PUT", body: JSON.stringify(settings) });
+    setMessage("");
+    const res = await fetch("/api/admin/settings", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(settings) });
     setSaving(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({} as any));
+      setMessage(data?.error || "Kaydedilemedi");
+      return;
+    }
+    setMessage("Kaydedildi");
+    setTimeout(() => setMessage("") ,2000);
   };
 
   if (!settings) return <div>Yükleniyor...</div>;
@@ -66,10 +75,11 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <div>
+      <div className="flex items-center gap-3">
         <button onClick={save} disabled={saving} className="rounded-md bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800 disabled:opacity-60">
           {saving ? "Kaydediliyor..." : "Kaydet"}
         </button>
+        {message && <span className={`text-sm ${message === "Kaydedildi" ? "text-emerald-700" : "text-red-700"}`}>{message}</span>}
       </div>
     </div>
   );

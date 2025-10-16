@@ -38,7 +38,12 @@ export default function BrandsAdmin() {
     load();
   };
   const remove = async (id: string) => {
-    await fetch(`/api/admin/brands?id=${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/brands?id=${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({} as any));
+      alert(data?.error || "Silinemedi");
+      return;
+    }
     load();
   };
 
