@@ -96,7 +96,10 @@ export default function BrandsAdmin() {
         }}>
           <input type="hidden" name="kind" value="brand" />
           <input type="hidden" name="slug" value={form.slug || ""} />
-          <input name="file" id="brand-new-file" type="file" accept="image/*" className="hidden" required onChange={(e) => setNewFileName(e.currentTarget.files?.[0]?.name || "")} />
+          <input name="file" id="brand-new-file" type="file" accept="image/*" className="hidden" required onChange={(e) => {
+            const target = e.target as HTMLInputElement;
+            setNewFileName(target?.files?.[0]?.name || "");
+          }} />
           <label htmlFor="brand-new-file" className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 cursor-pointer">{newFileName || "Dosya Seç"}</label>
           <button className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 cursor-pointer">Logo Yükle</button>
           <span className="text-xs text-gray-500">/brands/{form.slug || "slug"}.(jpg|png)</span>
@@ -128,7 +131,10 @@ export default function BrandsAdmin() {
               }}>
                 <input type="hidden" name="kind" value="brand" />
                 <input type="hidden" name="slug" value={b.slug} />
-                <input name="file" id={`brand-file-${b.id}`} type="file" accept="image/*" className="hidden" required onChange={(e) => setFileNames((m) => ({ ...m, [b.id]: e.currentTarget.files?.[0]?.name || "" }))} />
+                <input name="file" id={`brand-file-${b.id}`} type="file" accept="image/*" className="hidden" required onChange={(e) => {
+                  const target = e.target as HTMLInputElement;
+                  setFileNames((m) => ({ ...m, [b.id]: target?.files?.[0]?.name || "" }));
+                }} />
                 <label htmlFor={`brand-file-${b.id}`} className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 cursor-pointer">{fileNames[b.id] || "Dosya Seç"}</label>
                 <button className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 cursor-pointer">Logo Güncelle</button>
               </form>
