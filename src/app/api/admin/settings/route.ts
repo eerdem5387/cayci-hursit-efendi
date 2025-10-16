@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readJson, writeJson } from "@/lib/store";
+import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 
 type Settings = {
@@ -21,7 +21,8 @@ export async function GET() {
     if (!session || (session.user as any)?.role !== "admin") {
         return NextResponse.json({ ok: false, error: "Yetkisiz" }, { status: 401 });
     }
-    const settings = readJson<Settings>("settings.json", DEFAULTS);
+    const row = await prisma.settingKV.findUnique({ where: { key: "settings" } });
+    const settings = (row?.value as any) || DEFAULTS;
     return NextResponse.json(settings);
 }
 
@@ -32,7 +33,8 @@ export async function PUT(req: NextRequest) {
     }
     const incoming = (await req.json().catch(() => null)) as Partial<Settings> | null;
     if (!incoming) return NextResponse.json({ ok: false }, { status: 400 });
-    const current = readJson<Settings>("settings.json", DEFAULTS);
+    const currentRow = await prisma.settingKV.findUnique({ where: { key: "settings" } });
+    const current = ((currentRow?.value as any) || DEFAULTS) as Settings;
     const merged: Settings = {
         site: { ...current.site, ...(incoming.site || {}) },
         smtp: { ...current.smtp, ...(incoming.smtp || {}) },
@@ -41,7 +43,7 @@ export async function PUT(req: NextRequest) {
             ziraatPos: { ...current.payments.ziraatPos, ...(incoming.payments?.ziraatPos || {}) },
         },
     };
-    writeJson("settings.json", merged);
+    await prisma.settingKV.upsert({ where: { key: "settings" }, update: { value: merged as any }, create: { key: "settings", value: merged as any } });
     return NextResponse.json({ ok: true });
 }
 

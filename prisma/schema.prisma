@@ -73,4 +73,15 @@ model CartItem {
   qty   Int
 }
 
+// Site ayarları ve ana sayfa içerikleri için basit tablolar
+model SettingKV {
+  key   String @id
+  value Json
+}
+
+model HomeContentKV {
+  id    Int   @id @default(1)
+  value Json
+}
+
 

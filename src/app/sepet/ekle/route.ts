@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
     const slug = String(form.get("slug") || "");
     const qty = Number(form.get("qty") || 1);
     if (!slug || !qty) return NextResponse.redirect(new URL("/sepet", req.url));
-    await fetch(new URL("/api/cart", req.url), { method: "POST", body: JSON.stringify({ slug, qty }) });
+    await fetch(new URL("/api/cart", req.url), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug, qty }) });
     return NextResponse.redirect(new URL("/sepet", req.url));
 }
 

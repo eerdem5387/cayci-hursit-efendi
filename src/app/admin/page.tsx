@@ -33,8 +33,9 @@ export default function AdminHome() {
     Promise.all([
       fetch("/api/admin/products").then((r) => r.json()),
       fetch("/api/admin/brands").then((r) => r.json()),
-      fetch("/api/orders").then((r) => r.json()),
-    ]).then(([products, brands, orders]) => {
+      fetch("/api/orders?page=1&pageSize=1000").then((r) => r.json()),
+    ]).then(([products, brands, ordersRes]) => {
+      const orders = Array.isArray(ordersRes) ? ordersRes : (ordersRes.items || []);
       const lowStock = (products as any[]).filter((p) => {
         // Sadece stok değeri girilmiş ve 5 veya altında olan ürünler düşük stoklu
         return p.stock !== null && p.stock !== undefined && p.stock <= 5;
@@ -45,9 +46,9 @@ export default function AdminHome() {
       }, 0);
       
       // Sipariş durumu istatistikleri
-      const paidOrders = (orders as any[]).filter(o => o.status === 'paid').length;
-      const pendingOrders = (orders as any[]).filter(o => o.status === 'pending').length;
-      const failedOrders = (orders as any[]).filter(o => o.status === 'failed').length;
+      const paidOrders = (orders as any[]).filter((o: any) => o.status === 'paid').length;
+      const pendingOrders = (orders as any[]).filter((o: any) => o.status === 'pending').length;
+      const failedOrders = (orders as any[]).filter((o: any) => o.status === 'failed').length;
       
       const recent = (orders as any[])
         .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
@@ -61,7 +62,7 @@ export default function AdminHome() {
         }));
 
       // Popüler ürünler (satış sayısına göre)
-      const productSales = (orders as any[]).reduce((acc, order) => {
+      const productSales = (orders as any[]).reduce((acc: any, order: any) => {
         if (order.items) {
           order.items.forEach((item: any) => {
             const product = products.find((p: any) => p.slug === item.slug);
