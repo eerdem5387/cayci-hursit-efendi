@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { readJson, writeJson, generateId } from "@/lib/store";
-import { User } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
     try {
@@ -15,28 +14,22 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Şifre en az 6 karakter olmalı" }, { status: 400 });
         }
 
-        const users = readJson<User[]>("users.json", []);
-
-        // E-posta kontrolü
-        if (users.some(u => u.email === email)) {
+        const existing = await prisma.user.findUnique({ where: { email } });
+        if (existing) {
             return NextResponse.json({ error: "Bu e-posta adresi zaten kullanılıyor" }, { status: 400 });
         }
 
         // Şifreyi hash'le
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Yeni kullanıcı oluştur
-        const newUser: User & { password: string } = {
-            id: generateId("user"),
-            email,
-            name,
-            role: "customer",
-            createdAt: new Date().toISOString(),
-            password: hashedPassword,
-        };
-
-        users.push(newUser);
-        writeJson("users.json", users);
+        await prisma.user.create({
+            data: {
+                email,
+                name,
+                role: "customer",
+                password: hashedPassword,
+            },
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {
