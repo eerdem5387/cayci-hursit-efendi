@@ -7,8 +7,8 @@ export async function generateStaticParams() {
   return (products as any[]).map((p: any) => ({ slug: p.slug }));
 }
 
-export default async function ProductDetail({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default async function ProductDetail({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const products = await getProducts();
   const brands = await getBrands();
   const product = (products as any[]).find((p: any) => p.slug === slug);
