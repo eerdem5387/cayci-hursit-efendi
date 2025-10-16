@@ -5,8 +5,8 @@ import Link from "next/link";
 type Brand = { id: string; name: string; slug: string };
 type Product = { id: string; name: string; slug: string; brandId?: string; price: number; popular?: boolean; description?: string; weightKg?: number | null; stock?: number | null; images?: string[] };
 
-export default function ProductEditPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function ProductEditPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [brands, setBrands] = useState<Brand[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
