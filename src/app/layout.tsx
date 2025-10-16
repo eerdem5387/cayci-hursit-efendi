@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 // Dinamik metadata oluşturma
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = getSettings();
+  const settings = await getSettings();
   
   return {
     title: {
