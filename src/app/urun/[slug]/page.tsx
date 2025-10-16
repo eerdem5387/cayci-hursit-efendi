@@ -14,7 +14,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
   const product = (products as any[]).find((p: any) => p.slug === slug);
   if (!product) return <div className="mx-auto max-w-7xl px-4 py-10">Ürün bulunamadı.</div>;
   const brand = (product as any).brandId ? (brands as any[]).find((b: any) => b.id === (product as any).brandId) : null;
-  const images = (product as any).images && (product as any).images.length > 0 ? (product as any).images : [`/images/${slug}.jpg`];
+  const images: string[] = (product as any).images && (product as any).images.length > 0 ? ((product as any).images as string[]) : [`/images/${slug}.jpg`];
   const inStock = (product as any).stock === null || (product as any).stock === undefined || ((product as any).stock ?? 0) > 0;
 
   return (
@@ -26,7 +26,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
           </div>
           {images.length > 1 && (
             <div className="mt-3 grid grid-cols-4 gap-2">
-              {images.slice(1).map((src) => (
+              {images.slice(1).map((src: string) => (
                 <div key={src} className="relative h-20 w-full overflow-hidden rounded border border-gray-200">
                   <Image src={src} alt={(product as any).name} fill className="object-cover" />
                 </div>
