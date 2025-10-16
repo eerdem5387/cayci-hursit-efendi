@@ -1,0 +1,43 @@
+import { NextRequest, NextResponse } from "next/server";
+import { readJson, writeJson } from "@/lib/store";
+
+type HomeContent = {
+    popularIds: string[];
+    pillars: { title: string; subtitle: string; text: string }[];
+    video: { src: string; overlayTitle: string; overlaySubtitle: string; overlayText: string };
+};
+
+const DEFAULTS: HomeContent = {
+    popularIds: [],
+    pillars: [
+        { title: "1983'den beri", subtitle: "Miras & Gelenek", text: "..." },
+        { title: "Saf & Doğal", subtitle: "Gerçek Çay Tadı", text: "..." },
+        { title: "Kalite", subtitle: "Tarladan Bardağınıza El Değmeden", text: "..." },
+    ],
+    video: {
+        src: "/hero.mp4",
+        overlayTitle: "Tarladan Fincanınıza",
+        overlaySubtitle: "Çaycı Hurşit Efendi Yolculuğu",
+        overlayText: "Bağımsız olarak sahip olunan, organik çaylar ...",
+    },
+};
+
+export async function GET() {
+    const home = readJson<HomeContent>("home.json", DEFAULTS);
+    return NextResponse.json(home);
+}
+
+export async function PUT(req: NextRequest) {
+    const body = (await req.json().catch(() => null)) as Partial<HomeContent> | null;
+    if (!body) return NextResponse.json({ ok: false }, { status: 400 });
+    const current = readJson<HomeContent>("home.json", DEFAULTS);
+    const merged: HomeContent = {
+        popularIds: body.popularIds ?? current.popularIds,
+        pillars: body.pillars ?? current.pillars,
+        video: body.video ? { ...current.video, ...body.video } : current.video,
+    };
+    writeJson("home.json", merged);
+    return NextResponse.json({ ok: true });
+}
+
+

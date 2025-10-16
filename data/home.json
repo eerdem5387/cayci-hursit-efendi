@@ -1,0 +1,26 @@
+{
+  "popularIds": [],
+  "pillars": [
+    {
+      "title": "1983'den beri",
+      "subtitle": "Miras & Gelenek",
+      "text": "1983 yılında kurulan Sakaoğlu Çay, kaliteli ve uygun fiyatlı çay temini, üretimi ve dağıtımı yapmaktadır. Bu bilgi, birikim ve deneyimle oluşturduğumuz Çaycı Hurşit Efendi'yi tanıyın."
+    },
+    {
+      "title": "Saf & Doğal",
+      "subtitle": "Gerçek Çay Tadı",
+      "text": "Çay bahçelerinden taze koparılmış yaprakların büyüsüne inanıyoruz. Gerçek Çay Tadının ne anlama geldiğini öğrenin."
+    },
+    {
+      "title": "Kalite",
+      "subtitle": "Tarladan Bardağınıza El Değmeden",
+      "text": "Sadece lezzete değil, hijyene de önem veriyoruz. Tarlamızdan toplanan taze çay yaprakları işlenme ve paketleme sürecinde önemli hijyen aşamalarından geçer."
+    }
+  ],
+  "video": {
+    "src": "https://player.vimeo.com/video/735831672?muted=1&autoplay=1&loop=1&background=1&app_id=122963",
+    "overlayTitle": "Tarladan Fincanınıza",
+    "overlaySubtitle": "Çaycı Hurşit Efendi Yolculuğu",
+    "overlayText": "Bağımsız olarak sahip olunan, organik çaylar ..."
+  }
+}

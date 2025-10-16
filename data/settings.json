@@ -1,0 +1,23 @@
+{
+  "site": {
+    "title": "Test Site Başlığı",
+    "description": "Test açıklaması"
+  },
+  "smtp": {
+    "host": "",
+    "port": 587,
+    "user": "",
+    "pass": "",
+    "from": ""
+  },
+  "notifications": {
+    "adminEmail": ""
+  },
+  "payments": {
+    "ziraatPos": {
+      "merchantId": "",
+      "terminalId": "",
+      "posUrl": ""
+    }
+  }
+}

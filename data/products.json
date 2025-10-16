@@ -1,0 +1,137 @@
+[
+  {
+    "id": "prod_4nb3c4fy",
+    "name": "Bergamot Serisi - 1.5kg",
+    "slug": "bergamot-serisi",
+    "brandId": "brand_1suae4w0",
+    "price": 1400,
+    "popular": false,
+    "description": "Rize bereketli tarlalarından, kullanımı rahat demlik poşet çay ile zengin tat deneyimine dakikalar içinde ulaşın…",
+    "weightKg": 1.5,
+    "stock": null,
+    "images": [
+      "/images/bergamot-serisi.png"
+    ],
+    "order": 6
+  },
+  {
+    "id": "prod_l92ei91k",
+    "name": "Sakahve İtalian Blend",
+    "slug": "sakahve-italian-blend",
+    "brandId": "brand_0l2p6j7v",
+    "price": 1350,
+    "popular": false,
+    "description": "Sakahve",
+    "weightKg": null,
+    "stock": null,
+    "images": [
+      "/images/sakahve-italian-blend.png"
+    ],
+    "order": 7
+  },
+  {
+    "id": "prod_mcobqufb",
+    "name": "Sakahve House Blend",
+    "slug": "sakahve-house-blend",
+    "brandId": "brand_0l2p6j7v",
+    "price": 1000,
+    "popular": false,
+    "description": "Sakahve",
+    "weightKg": null,
+    "stock": null,
+    "images": [
+      "/images/sakahve-house-blend.png"
+    ],
+    "order": 8
+  },
+  {
+    "id": "prod_5rhsmzt4",
+    "name": "Sakahve Special Arabica",
+    "slug": "sakahve-special-arabica",
+    "brandId": "brand_0l2p6j7v",
+    "price": 1200,
+    "popular": false,
+    "description": "Sakahve",
+    "weightKg": null,
+    "stock": null,
+    "images": [
+      "/images/sakahve-special-arabica.png"
+    ],
+    "order": 9
+  },
+  {
+    "id": "prod_0o8wna16",
+    "name": "Hurşit Efendi",
+    "slug": "hur-it-efendi",
+    "brandId": "brand_q9a13gue",
+    "price": 1400,
+    "popular": true,
+    "description": "Çaycı Hurşit Efendi",
+    "weightKg": 3,
+    "stock": null,
+    "images": [
+      "/images/hur-it-efendi.png"
+    ],
+    "order": 1
+  },
+  {
+    "id": "prod_xu3ntuja",
+    "name": "Klasik Seri Demlik Poşet Çay",
+    "slug": "klasik-seri-demlik-po-et-ay",
+    "brandId": "brand_1suae4w0",
+    "price": 1850,
+    "popular": true,
+    "description": "Rize bereketli tarlalarından, kullanımı rahat demlik poşet çay ile zengin tat deneyimine dakikalar içinde ulaşın…\n\nDemlik Poşet Çay",
+    "weightKg": 5,
+    "stock": null,
+    "images": [
+      "/images/klasik-seri-demlik-po-et-ay.png"
+    ],
+    "order": 4
+  },
+  {
+    "id": "prod_i9fh2pr6",
+    "name": "Klasik Seri Dökme Çay",
+    "slug": "klasik-seri-d-kme-ay",
+    "brandId": "brand_1suae4w0",
+    "price": 1750,
+    "popular": false,
+    "description": "Nefis kokusu ve lezzetiyle Türk damak zevkine uygun içimi kolay geleneksel Rize çayı…",
+    "weightKg": 5,
+    "stock": null,
+    "images": [
+      "/images/klasik-seri-d-kme-ay.png"
+    ],
+    "order": 5
+  },
+  {
+    "id": "prod_qrwsqeve",
+    "name": "Gold Serisi Demlik Poşet Çay​ (Mayıs Çayı)",
+    "slug": "gold-serisi-demlik-po-et-ay-may-s-ay",
+    "brandId": "brand_1suae4w0",
+    "price": 2000,
+    "popular": true,
+    "description": "",
+    "weightKg": 5,
+    "stock": null,
+    "images": [
+      "/images/gold-serisi-demlik-po-et-ay-may-s-ay.png"
+    ],
+    "order": 2
+  },
+  {
+    "id": "prod_iup2ac9g",
+    "name": "Gold Serisi Dökme Çay​ (Mayıs Çayı)",
+    "slug": "gold-serisi-d-kme-ay-may-s-ay",
+    "brandId": "brand_1suae4w0",
+    "price": 1850,
+    "popular": false,
+    "description": "Kar suyunun lezzetiyle beslenmiş, ilkbaharın en taze filizlerini sofralarınıza taşıyarak, 1. kalite Mayıs Çayı’nı müşterilerimize sunuyoruz.\n\nFarklı sürgünlerde işlenen kaliteli çayların harmanlanmasıyla üretilir. Hoş tadı ve içimiyle her daim tüketilebilecek nefis aroması ve lezzetiyle ön plana çıkan ürünümüzdür.\n\n\"10 Kiloluk\" seçenek ile sipariş vermeniz durumunda 1 kiloluk paketler halinde siparişiniz size ulaştırılır.",
+    "weightKg": 5,
+    "stock": null,
+    "images": [
+      "/images/gold-serisi-d-kme-ay-may-s-ay.png"
+    ],
+    "order": 3
+  }
+]
