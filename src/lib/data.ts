@@ -16,6 +16,7 @@ export type Product = {
 export type Settings = {
     site: { title: string; description: string };
     smtp: { host: string; port: number; user: string; pass: string; from: string };
+    notifications?: { adminEmail?: string };
     payments: { ziraatPos: { merchantId?: string; terminalId?: string; posUrl?: string } };
 };
 export type HomeContent = {
@@ -44,6 +45,7 @@ export function getSettings(): Settings {
     return readJson<Settings>("settings.json", {
         site: { title: "Çaycı Hurşit Efendi", description: "Gerçek çay tadı" },
         smtp: { host: "", port: 587, user: "", pass: "", from: "" },
+        notifications: { adminEmail: "" },
         payments: { ziraatPos: {} },
     });
 }
