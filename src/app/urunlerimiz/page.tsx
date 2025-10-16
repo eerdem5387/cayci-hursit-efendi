@@ -3,13 +3,12 @@ import { getBrands, getProducts } from "@/lib/data";
 
 export const metadata = { title: "Ürünlerimiz" };
 
-export default async function ProductsPage({ searchParams }: { searchParams?: Promise<{ marka?: string }> }) {
-  const products = getProducts();
-  const brands = getBrands();
-  const resolvedSearchParams = await searchParams;
-  const brandParam = (resolvedSearchParams?.marka as string) || null;
-  const brand = brands.find((b) => b.slug === brandParam) || null;
-  const filtered = (brand ? products.filter((p) => p.brandId === brand.id) : products).sort((a, b) => (a.order || 0) - (b.order || 0));
+export default async function ProductsPage({ searchParams }: { searchParams?: { marka?: string } }) {
+  const products = await getProducts();
+  const brands = await getBrands();
+  const brandParam = (searchParams?.marka as string) || null;
+  const brand = (brands as any[]).find((b: any) => b.slug === brandParam) || null;
+  const filtered = ((brand ? (products as any[]).filter((p: any) => p.brandId === (brand as any).id) : (products as any[])) as any[]).sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">

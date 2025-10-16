@@ -1,8 +1,8 @@
 import nodemailer from "nodemailer";
 import { getSettings } from "@/lib/data";
 
-export function createTransport() {
-    const s = getSettings().smtp;
+export async function createTransport() {
+    const s = (await getSettings()).smtp;
     return nodemailer.createTransport({
         host: s.host,
         port: s.port,
@@ -12,8 +12,8 @@ export function createTransport() {
 }
 
 export async function sendMail(to: string, subject: string, html: string) {
-    const transport = createTransport();
-    const from = getSettings().smtp.from || "no-reply@localhost";
+    const transport = await createTransport();
+    const from = (await getSettings()).smtp.from || "no-reply@localhost";
     await transport.sendMail({ from, to, subject, html });
 }
 
