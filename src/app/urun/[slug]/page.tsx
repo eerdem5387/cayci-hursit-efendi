@@ -14,7 +14,7 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
   const product = (products as any[]).find((p: any) => p.slug === slug);
   if (!product) return <div className="mx-auto max-w-7xl px-4 py-10">Ürün bulunamadı.</div>;
   const brand = (product as any).brandId ? (brands as any[]).find((b: any) => b.id === (product as any).brandId) : null;
-  const images: string[] = (product as any).images && (product as any).images.length > 0 ? ((product as any).images as string[]) : [`/images/${slug}.jpg`];
+  const images: string[] = (product as any).images && (product as any).images.length > 0 ? ((product as any).images as string[]) : [];
   const inStock = (product as any).stock === null || (product as any).stock === undefined || ((product as any).stock ?? 0) > 0;
 
   return (
@@ -22,7 +22,11 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
       <div className="grid gap-10 md:grid-cols-2">
         <div>
           <div className="relative h-96 w-full overflow-hidden rounded-xl border border-gray-200">
-            <Image src={images[0]} alt={(product as any).name} fill className="object-cover" />
+            {images[0] ? (
+              <Image src={images[0]} alt={(product as any).name} fill className="object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-500">Görsel yok</div>
+            )}
           </div>
           {images.length > 1 && (
             <div className="mt-3 grid grid-cols-4 gap-2">

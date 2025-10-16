@@ -67,6 +67,20 @@ export async function POST(req: NextRequest) {
         }
     }
 
+    // Ürün görseli ise ürüne ekle (varsa)
+    if (kind === "product") {
+        try {
+            const prod = await prisma.product.findUnique({ where: { slug } });
+            if (prod) {
+                const currentImages = Array.isArray((prod as any).images) ? ((prod as any).images as string[]) : [];
+                const nextImages = [...currentImages, finalUrl];
+                await prisma.product.update({ where: { slug }, data: { images: nextImages as any } });
+            }
+        } catch (e: any) {
+            console.error("Product image append failed:", e);
+        }
+    }
+
     return NextResponse.json({ ok: true, path: finalUrl });
 }
 
