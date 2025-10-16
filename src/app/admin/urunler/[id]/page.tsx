@@ -93,6 +93,11 @@ export default function ProductEditPage({ params }: { params: Promise<{ id: stri
             const formEl = e.currentTarget as HTMLFormElement;
             const f = new FormData(formEl);
             const resp = await fetch("/api/admin/upload", { method: "POST", body: f });
+            if (!resp.ok) {
+              const er = await resp.json().catch(() => ({} as any));
+              alert(er?.error || "Görsel yüklenemedi");
+              return;
+            }
             const data = await resp.json().catch(() => ({} as any));
             if (data?.path) {
               setProduct((prev) => prev ? { ...prev, images: Array.isArray(prev.images) ? [...prev.images, data.path] : [data.path] } : prev);

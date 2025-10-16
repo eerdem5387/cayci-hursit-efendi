@@ -66,7 +66,12 @@ export default function BrandsAdmin() {
           e.preventDefault();
           const formEl = e.currentTarget as HTMLFormElement;
           const f = new FormData(formEl);
-          await fetch("/api/admin/upload", { method: "POST", body: f });
+          const res = await fetch("/api/admin/upload", { method: "POST", body: f });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({} as any));
+            alert(data?.error || "Logo yüklenemedi");
+            return;
+          }
           formEl.reset();
         }}>
           <input type="hidden" name="kind" value="brand" />
@@ -89,7 +94,12 @@ export default function BrandsAdmin() {
                 e.preventDefault();
                 const formEl = e.currentTarget as HTMLFormElement;
                 const f = new FormData(formEl);
-                await fetch("/api/admin/upload", { method: "POST", body: f });
+                const res = await fetch("/api/admin/upload", { method: "POST", body: f });
+                if (!res.ok) {
+                  const data = await res.json().catch(() => ({} as any));
+                  alert(data?.error || "Logo güncellenemedi");
+                  return;
+                }
                 formEl.reset();
               }}>
                 <input type="hidden" name="kind" value="brand" />

@@ -41,7 +41,14 @@ export default function ProductCreatePage() {
     e.preventDefault();
     const formEl = e.currentTarget as HTMLFormElement;
     const f = new FormData(formEl);
-    await fetch("/api/admin/upload", { method: "POST", body: f });
+    const res = await fetch("/api/admin/upload", { method: "POST", body: f });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({} as any));
+      alert(data?.error || "Görsel yüklenemedi");
+      return;
+    }
+    const data = await res.json().catch(() => ({} as any));
+    if (data?.path) alert(`Yüklendi: ${data.path}`);
     formEl.reset();
   };
 
