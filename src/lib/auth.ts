@@ -39,7 +39,7 @@ providers.push(
                 return null;
             }
 
-            const dbUser = await prisma.user.findUnique({ where: { email: credentials.email } });
+            const dbUser = await prisma.user.findUnique({ where: { email: String(credentials.email) } });
             if (!dbUser) return null;
             if (dbUser.googleId) return null; // Google ile kayıtlı kullanıcı şifreyle giriş yapamaz
             if (!dbUser.password) return null;
