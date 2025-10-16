@@ -29,46 +29,46 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 
 providers.push(
     CredentialsProvider({
-            name: "credentials",
-            credentials: {
-                email: { label: "Email", type: "email" },
-                password: { label: "Password", type: "password" },
-            },
-            async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) {
-                    return null;
-                }
+        name: "credentials",
+        credentials: {
+            email: { label: "Email", type: "email" },
+            password: { label: "Password", type: "password" },
+        },
+        async authorize(credentials) {
+            if (!credentials?.email || !credentials?.password) {
+                return null;
+            }
 
-                const users = readJson<User[]>("users.json", []);
-                const user = users.find((u) => u.email === credentials.email);
+            const users = readJson<User[]>("users.json", []);
+            const user = users.find((u) => u.email === credentials.email);
 
-                if (!user) {
-                    return null;
-                }
+            if (!user) {
+                return null;
+            }
 
-                // Google kullanıcıları için şifre kontrolü yapma
-                if (user.googleId) {
-                    return null;
-                }
+            // Google kullanıcıları için şifre kontrolü yapma
+            if (user.googleId) {
+                return null;
+            }
 
-                // Şifre kontrolü
-                if (!user.password || typeof user.password !== 'string') {
-                    return null;
-                }
-                const isValid = await bcrypt.compare(String(credentials.password), String(user.password));
+            // Şifre kontrolü
+            if (!user.password || typeof user.password !== 'string') {
+                return null;
+            }
+            const isValid = await bcrypt.compare(String(credentials.password), String(user.password));
 
-                if (!isValid) {
-                    return null;
-                }
+            if (!isValid) {
+                return null;
+            }
 
-                return {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role,
-                };
-            },
-        })
+            return {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+            };
+        },
+    })
 );
 
 export const authOptions: NextAuthConfig = {
