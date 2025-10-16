@@ -48,7 +48,7 @@ export async function Brands() {
           <Link key={b.id} href={`/urunlerimiz?marka=${b.slug}`} className="group relative block overflow-hidden rounded-3xl">
             <div className="relative aspect-square w-full">
               <Image
-                src={`/brands/${b.slug}.jpg`}
+                src={(b as any).logoUrl || `/brands/${b.slug}.jpg`}
                 alt={b.name}
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"

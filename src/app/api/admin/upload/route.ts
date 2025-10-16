@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import path from "path";
 import fs from "fs";
 import { put } from "@vercel/blob";
@@ -23,6 +24,8 @@ export async function POST(req: NextRequest) {
     const subdir = kind === "brand" ? "brands" : "images";
     const rel = `${subdir}/${slug}.${ext}`;
 
+    let finalUrl = "";
+
     // Vercel Blob varsa onu kullan
     if (process.env.BLOB_READ_WRITE_TOKEN) {
         try {
@@ -34,22 +37,37 @@ export async function POST(req: NextRequest) {
                 allowOverwrite: useOverwrite,
                 addRandomSuffix: !useOverwrite,
             });
-            return NextResponse.json({ ok: true, path: blob.url });
+            finalUrl = blob.url;
         } catch (e: any) {
             return NextResponse.json({ ok: false, error: e?.message || "Blob yükleme hatası" }, { status: 500 });
         }
+    } else {
+        // Local/dev fallback
+        const relLocal = `/${rel}`;
+        const outPath = path.join(process.cwd(), "public", subdir);
+        if (!fs.existsSync(outPath)) fs.mkdirSync(outPath, { recursive: true });
+        try {
+            fs.writeFileSync(path.join(process.cwd(), "public", relLocal), bytes);
+            finalUrl = relLocal;
+        } catch (e: any) {
+            return NextResponse.json({ ok: false, error: e?.message || "Dosya yazma hatası" }, { status: 500 });
+        }
     }
 
-    // Local/dev fallback
-    const relLocal = `/${rel}`;
-    const outPath = path.join(process.cwd(), "public", subdir);
-    if (!fs.existsSync(outPath)) fs.mkdirSync(outPath, { recursive: true });
-    try {
-        fs.writeFileSync(path.join(process.cwd(), "public", relLocal), bytes);
-        return NextResponse.json({ ok: true, path: relLocal });
-    } catch (e: any) {
-        return NextResponse.json({ ok: false, error: e?.message || "Dosya yazma hatası" }, { status: 500 });
+    // Marka logosu ise veritabanına kaydet
+    if (kind === "brand") {
+        try {
+            await prisma.brand.update({
+                where: { slug },
+                data: { logoUrl: finalUrl }
+            });
+        } catch (e: any) {
+            console.error("Brand logo URL update failed:", e);
+            // Logo yüklendi ama veritabanı güncellenemedi, yine de başarılı say
+        }
     }
+
+    return NextResponse.json({ ok: true, path: finalUrl });
 }
 
 

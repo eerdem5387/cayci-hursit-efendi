@@ -25,9 +25,10 @@ model User {
 }
 
 model Brand {
-  id    String @id @default(cuid())
-  name  String
-  slug  String @unique
+  id      String @id @default(cuid())
+  name    String
+  slug    String @unique
+  logoUrl String?
   products Product[]
 }
 

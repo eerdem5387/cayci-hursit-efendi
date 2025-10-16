@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 
-export type Brand = { id: string; name: string; slug: string };
+export type Brand = { id: string; name: string; slug: string; logoUrl?: string };
 export type Product = {
     id: string;
     name: string;

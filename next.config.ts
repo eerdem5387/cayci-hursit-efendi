@@ -6,6 +6,16 @@ const nextConfig: NextConfig = {
     // Ignore ESLint errors during production builds on Vercel
     ignoreDuringBuilds: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
