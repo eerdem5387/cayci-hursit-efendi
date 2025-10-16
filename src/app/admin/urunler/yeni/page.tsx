@@ -7,6 +7,7 @@ type Brand = { id: string; name: string; slug: string };
 export default function ProductCreatePage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [form, setForm] = useState({ name: "", slug: "", brandId: "", price: "", weightKg: "", stock: "", description: "", popular: false });
+  const [images, setImages] = useState<string[]>([]);
   const [busy, setBusy] = useState<{save?: boolean; upload?: boolean}>({});
   const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 
@@ -29,6 +30,7 @@ export default function ProductCreatePage() {
       stock: form.stock ? Number(form.stock) : null,
       description: form.description,
       popular: form.popular,
+      images,
     };
     const res = await fetch("/api/admin/products", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     if (!res.ok) {
@@ -53,7 +55,7 @@ export default function ProductCreatePage() {
       return;
     }
     const data = await res.json().catch(() => ({} as any));
-    if (data?.path) alert(`Yüklendi: ${data.path}`);
+    if (data?.path) setImages((arr) => [...arr, data.path]);
     formEl.reset();
     setBusy((b) => ({ ...b, upload: false }));
   };
@@ -132,6 +134,9 @@ export default function ProductCreatePage() {
           <div className="text-xs text-gray-500">
             Dosya yolu: <code>/images/{slugify(form.name) || "slug"}.(jpg|png)</code>
           </div>
+          {images.length > 0 && (
+            <div className="text-xs text-gray-600">Eklenen görseller: {images.length}</div>
+          )}
         </form>
       </div>
     </div>
