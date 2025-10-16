@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
     const cart = await prisma.cartItem.findMany();
 
     // Toplam tutarı hesapla
-    const products = getProducts();
-    const priceMap = Object.fromEntries(products.map((p) => [p.slug, p.price]));
+    const products = await getProducts();
+    const priceMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.price]));
     const total = cart.reduce((sum, item) => {
         const price = priceMap[item.slug] || 0;
         return sum + (price * item.qty);
@@ -47,10 +47,10 @@ export async function POST(req: NextRequest) {
     await prisma.cartItem.deleteMany();
 
     // E-posta bildirimleri
-    const settings = getSettings();
+    const settings = await getSettings();
     const adminTo = settings.notifications?.adminEmail || settings.smtp.from || "";
     const customerTo = email;
-    const nameMap = Object.fromEntries(products.map((p) => [p.slug, p.name]));
+    const nameMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.name]));
     const templOrder = {
         id: created.id,
         createdAt: created.createdAt.toISOString(),
