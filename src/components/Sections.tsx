@@ -2,12 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { getBrands, getHome, getProducts } from "@/lib/data";
 
-export function PopularTeas() {
-  const productsPromise = getProducts();
-  // App Router server component: await edebiliriz
-  // @ts-expect-error async server component
-  const products = (await productsPromise) as any[];
-  const popular = products.filter((p: any) => p.popular === true);
+export async function PopularTeas() {
+  const products = await getProducts();
+  const popular = (products as any[]).filter((p: any) => p.popular === true);
   return (
     <section className="mx-auto mt-16 max-w-7xl px-4 md:px-6">
       <div className="mb-6 flex items-end justify-between">
@@ -41,8 +38,7 @@ export function PopularTeas() {
   );
 }
 
-export function Brands() {
-  // @ts-expect-error async server component
+export async function Brands() {
   const brands = await getBrands();
   return (
     <section className="mx-auto mt-16 max-w-7xl px-4 md:px-6">
@@ -103,8 +99,7 @@ export function AboutTeaser() {
   );
 }
 
-export function Pillars() {
-  // @ts-expect-error async server component
+export async function Pillars() {
   const items = (await getHome()).pillars;
   return (
     <section className="mx-auto mt-16 max-w-7xl px-4 md:px-6">
@@ -131,8 +126,7 @@ export function Pillars() {
   );
 }
 
-export function VideoBanner() {
-  // @ts-expect-error async server component
+export async function VideoBanner() {
   const v = (await getHome()).video;
   return (
     <section className="relative mt-12 left-1/2 -translate-x-1/2 w-screen">
