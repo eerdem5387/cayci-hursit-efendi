@@ -27,7 +27,7 @@ export default function SignInPage() {
         setError("E-posta veya şifre hatalı");
       } else {
         const session = await getSession();
-        if (session?.user?.role === "admin") {
+        if ((session?.user as any)?.role === "admin") {
           router.push("/admin");
         } else {
           router.push("/");

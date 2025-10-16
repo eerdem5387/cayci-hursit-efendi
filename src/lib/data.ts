@@ -10,7 +10,8 @@ export type Product = {
     popular?: boolean;
     description?: string;
     weightKg?: number | null;
-    stock?: number;
+    stock?: number | null;
+    order?: number;
     images?: string[];
 };
 export type Settings = {
