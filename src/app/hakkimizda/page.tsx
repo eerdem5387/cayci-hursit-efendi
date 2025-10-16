@@ -1,10 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
 
-export const metadata = {
-  title: "Hakkımızda",
-};
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {

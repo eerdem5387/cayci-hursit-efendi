@@ -1,10 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
 
-export const metadata = {
-  title: "İletişim",
-};
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -78,8 +74,8 @@ export default function ContactPage() {
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
         />
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
