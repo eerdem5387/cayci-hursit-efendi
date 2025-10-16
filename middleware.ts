@@ -44,14 +44,14 @@ export default async function middleware(req: NextRequest) {
 }
 
 export const config = {
-    matcher: [
-        "/admin",
-        "/admin/:path*",
-        "/profil",
-        "/profil/:path*",
-        "/siparislerim",
-        "/siparislerim/:path*",
-    ],
+  matcher: [
+    "/admin",
+    "/admin/:path*",
+    "/profil",
+    "/profil/:path*",
+    "/siparislerim",
+    "/siparislerim/:path*",
+  ],
 };
 
 
