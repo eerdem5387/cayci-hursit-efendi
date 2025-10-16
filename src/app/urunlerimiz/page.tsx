@@ -3,10 +3,11 @@ import { getBrands, getProducts } from "@/lib/data";
 
 export const metadata = { title: "Ürünlerimiz" };
 
-export default async function ProductsPage({ searchParams }: { searchParams?: { marka?: string } }) {
+export default async function ProductsPage({ searchParams }: { searchParams?: Promise<{ marka?: string }> }) {
   const products = await getProducts();
   const brands = await getBrands();
-  const brandParam = (searchParams?.marka as string) || null;
+  const sp = searchParams ? await searchParams : undefined;
+  const brandParam = (sp?.marka as string) || null;
   const brand = (brands as any[]).find((b: any) => b.slug === brandParam) || null;
   const filtered = ((brand ? (products as any[]).filter((p: any) => p.brandId === (brand as any).id) : (products as any[])) as any[]).sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
