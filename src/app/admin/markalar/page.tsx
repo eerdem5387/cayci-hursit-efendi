@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-type Brand = { id: string; name: string; slug: string };
+type Brand = { id: string; name: string; slug: string; logoUrl?: string | null };
 
 export default function BrandsAdmin() {
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -13,7 +13,19 @@ export default function BrandsAdmin() {
   const [fileNames, setFileNames] = useState<Record<string,string>>({});
 
   const load = () => fetch("/api/admin/brands").then((r) => r.json()).then(setBrands);
-  useEffect(() => { load(); }, []);
+  const loadOrder = () => fetch("/api/admin/brands/order").then((r) => r.json()).catch(() => ({ order: [] as string[] }));
+  useEffect(() => { (async () => {
+    await load();
+    const data = await loadOrder();
+    if (data && Array.isArray(data.order) && data.order.length) {
+      setBrands((bs) => {
+        const idTo = new Map(bs.map((b) => [b.id, b]));
+        const ordered = data.order.map((id: string) => idTo.get(id)).filter(Boolean) as Brand[];
+        const remaining = bs.filter((b) => !data.order.includes(b.id));
+        return [...ordered, ...remaining];
+      });
+    }
+  })(); }, []);
 
   const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 
@@ -109,10 +121,51 @@ export default function BrandsAdmin() {
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <h2 className="mb-2 font-semibold">Liste</h2>
         <div className="grid gap-2">
-          {brands.filter((b) => !query.trim() || b.name.toLowerCase().includes(query.trim().toLowerCase()) || b.slug.toLowerCase().includes(query.trim().toLowerCase())).map((b) => (
+          {brands.filter((b) => !query.trim() || b.name.toLowerCase().includes(query.trim().toLowerCase()) || b.slug.toLowerCase().includes(query.trim().toLowerCase())).map((b, idx) => (
             <div key={b.id} className="flex items-center gap-2">
               <input className="w-48 rounded border border-gray-300 px-2 py-1" value={b.name} onChange={(e) => update({ ...b, name: e.target.value })} />
               <input className="w-48 rounded border border-gray-300 px-2 py-1" value={b.slug} onChange={(e) => update({ ...b, slug: e.target.value })} />
+              <span className={"rounded-full px-2 py-0.5 text-xs " + (b.logoUrl ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-gray-50 text-gray-700 border border-gray-200")}>{b.logoUrl ? "Görsel var" : "Görsel yok"}</span>
+              <div className="ml-2 flex items-center gap-1">
+                <button
+                  title="Yukarı"
+                  className="rounded border border-gray-300 px-2 py-0.5 text-xs hover:bg-gray-50 disabled:opacity-50"
+                  disabled={idx === 0}
+                  onClick={async () => {
+                    setBrands((arr) => {
+                      const copy = [...arr];
+                      const t = copy[idx];
+                      copy[idx] = copy[idx - 1];
+                      copy[idx - 1] = t;
+                      return copy;
+                    });
+                    const order = brands.map((x) => x.id);
+                    const newOrder = [...order];
+                    const temp = newOrder[idx]; newOrder[idx] = newOrder[idx-1]; newOrder[idx-1] = temp;
+                    await fetch("/api/admin/brands/order", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ order: newOrder }) });
+                  }}>
+                  ↑
+                </button>
+                <button
+                  title="Aşağı"
+                  className="rounded border border-gray-300 px-2 py-0.5 text-xs hover:bg-gray-50 disabled:opacity-50"
+                  disabled={idx === brands.length - 1}
+                  onClick={async () => {
+                    setBrands((arr) => {
+                      const copy = [...arr];
+                      const t = copy[idx];
+                      copy[idx] = copy[idx + 1];
+                      copy[idx + 1] = t;
+                      return copy;
+                    });
+                    const order = brands.map((x) => x.id);
+                    const newOrder = [...order];
+                    const temp = newOrder[idx]; newOrder[idx] = newOrder[idx+1]; newOrder[idx+1] = temp;
+                    await fetch("/api/admin/brands/order", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ order: newOrder }) });
+                  }}>
+                  ↓
+                </button>
+              </div>
           <button className="rounded border border-red-300 px-3 py-1 text-red-700 disabled:opacity-60 transition-transform active:scale-95" onClick={() => remove(b.id)} disabled={!!busy["d:"+b.id]}>{busy["d:"+b.id] ? 'Siliniyor…' : 'Sil'}</button>
               <form className="ml-auto flex items-center gap-2" onSubmit={async (e) => {
                 e.preventDefault();

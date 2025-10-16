@@ -29,7 +29,15 @@ export type HomeContent = {
 
 export async function getBrands(): Promise<Brand[]> {
     noStore();
-    return prisma.brand.findMany({ orderBy: { name: "asc" } });
+    const brands = await prisma.brand.findMany({ orderBy: { name: "asc" } });
+    // Apply custom order if exists
+    const orderRow = await prisma.settingKV.findUnique({ where: { key: "brandOrder" } });
+    const order = (Array.isArray((orderRow as any)?.value) ? (orderRow as any).value : []) as string[];
+    if (!order.length) return brands as any;
+    const idToBrand = new Map((brands as any[]).map((b: any) => [b.id, b]));
+    const ordered = order.map((id) => idToBrand.get(id)).filter(Boolean) as any[];
+    const remaining = (brands as any[]).filter((b: any) => !order.includes(b.id));
+    return [...ordered, ...remaining] as any;
 }
 
 export async function getProducts(): Promise<Product[]> {
