@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [testing, setTesting] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/settings", { cache: "no-store" })
@@ -56,6 +57,28 @@ export default function SettingsPage() {
           <input className="rounded border border-gray-300 px-3 py-2" value={settings.smtp.user} onChange={(e) => setSettings({ ...settings, smtp: { ...settings.smtp, user: e.target.value } })} placeholder="Kullanıcı" />
           <input className="rounded border border-gray-300 px-3 py-2" type="password" value={settings.smtp.pass} onChange={(e) => setSettings({ ...settings, smtp: { ...settings.smtp, pass: e.target.value } })} placeholder="Parola" />
           <input className="rounded border border-gray-300 px-3 py-2 md:col-span-2" value={settings.smtp.from} onChange={(e) => setSettings({ ...settings, smtp: { ...settings.smtp, from: e.target.value } })} placeholder="Gönderen (from)" />
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            onClick={async () => {
+              setTesting(true);
+              setMessage("");
+              const res = await fetch("/api/admin/settings/test-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+              setTesting(false);
+              if (!res.ok) {
+                const data = await res.json().catch(() => ({} as any));
+                setMessage(data?.error || "Test e-postası gönderilemedi");
+                return;
+              }
+              setMessage("Test e-postası gönderildi");
+              setTimeout(() => setMessage(""), 2000);
+            }}
+            className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50"
+            disabled={testing}
+          >
+            {testing ? "Gönderiliyor…" : "Test E-postası Gönder"}
+          </button>
+          <span className="text-xs text-gray-500">Hedef: adminEmail varsa orası; yoksa SMTP from</span>
         </div>
       </section>
 
