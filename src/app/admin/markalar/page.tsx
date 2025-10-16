@@ -8,6 +8,9 @@ export default function BrandsAdmin() {
   const [form, setForm] = useState<Partial<Brand>>({ name: "", slug: "" });
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState<{[k:string]: boolean}>({});
+  const [message, setMessage] = useState<string>("");
+  const [newFileName, setNewFileName] = useState<string>("");
+  const [fileNames, setFileNames] = useState<Record<string,string>>({});
 
   const load = () => fetch("/api/admin/brands").then((r) => r.json()).then(setBrands);
   useEffect(() => { load(); }, []);
@@ -28,6 +31,8 @@ export default function BrandsAdmin() {
     }
     setForm({ name: "", slug: "" });
     load();
+    setMessage("Marka eklendi");
+    setTimeout(() => setMessage(""), 2000);
   };
   const update = async (b: Brand) => {
     setBusy((s) => ({ ...s, ["u:"+b.id]: true }));
@@ -41,6 +46,8 @@ export default function BrandsAdmin() {
       alert(data?.error || "Güncellenemedi");
     }
     load();
+    setMessage("Güncellendi");
+    setTimeout(() => setMessage(""), 2000);
   };
   const remove = async (id: string) => {
     setBusy((s) => ({ ...s, ["d:"+id]: true }));
@@ -52,11 +59,14 @@ export default function BrandsAdmin() {
       return;
     }
     load();
+    setMessage("Silindi");
+    setTimeout(() => setMessage(""), 2000);
   };
 
   return (
     <div className="grid gap-6">
       <h1 className="text-2xl font-semibold">Markalar</h1>
+      {message && (<div className={`rounded border px-3 py-2 text-sm ${message.includes('eklendi') || message.includes('Güncellendi') ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-gray-200 bg-gray-50 text-gray-700'}`}>{message}</div>)}
 
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <input className="w-full rounded border border-gray-300 px-3 py-2" placeholder="Ara (ad veya slug)" value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -80,11 +90,15 @@ export default function BrandsAdmin() {
             return;
           }
           formEl.reset();
+          setNewFileName("");
+          setMessage("Logo yüklendi");
+          setTimeout(() => setMessage(""), 2000);
         }}>
           <input type="hidden" name="kind" value="brand" />
           <input type="hidden" name="slug" value={form.slug || ""} />
-          <input name="file" type="file" accept="image/*" className="text-sm" required />
-          <button className="rounded border border-gray-300 px-3 py-1 text-sm">Logo Yükle</button>
+          <input name="file" id="brand-new-file" type="file" accept="image/*" className="hidden" required onChange={(e) => setNewFileName(e.currentTarget.files?.[0]?.name || "")} />
+          <label htmlFor="brand-new-file" className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 cursor-pointer">{newFileName || "Dosya Seç"}</label>
+          <button className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 cursor-pointer">Logo Yükle</button>
           <span className="text-xs text-gray-500">/brands/{form.slug || "slug"}.(jpg|png)</span>
         </form>
       </div>
@@ -108,11 +122,15 @@ export default function BrandsAdmin() {
                   return;
                 }
                 formEl.reset();
+                setFileNames((m) => ({ ...m, [b.id]: "" }));
+                setMessage("Logo güncellendi");
+                setTimeout(() => setMessage(""), 2000);
               }}>
                 <input type="hidden" name="kind" value="brand" />
                 <input type="hidden" name="slug" value={b.slug} />
-                <input name="file" type="file" accept="image/*" className="text-sm" required />
-                <button className="rounded border border-gray-300 px-3 py-1 text-sm">Logo Güncelle</button>
+                <input name="file" id={`brand-file-${b.id}`} type="file" accept="image/*" className="hidden" required onChange={(e) => setFileNames((m) => ({ ...m, [b.id]: e.currentTarget.files?.[0]?.name || "" }))} />
+                <label htmlFor={`brand-file-${b.id}`} className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 cursor-pointer">{fileNames[b.id] || "Dosya Seç"}</label>
+                <button className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50 cursor-pointer">Logo Güncelle</button>
               </form>
             </div>
           ))}
