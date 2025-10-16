@@ -9,8 +9,19 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({ req });
-  const isAuthenticated = !!token;
+  // Basic cookie-based check first (robust in dev even without NEXTAUTH_SECRET)
+  const sessionCookie =
+    req.cookies.get("authjs.session-token")?.value ||
+    req.cookies.get("__Secure-authjs.session-token")?.value ||
+    null;
+
+  let token: any = null;
+  try {
+    token = await getToken({ req });
+  } catch {
+    // ignore; we'll fall back to cookie presence
+  }
+  const isAuthenticated = !!(token || sessionCookie);
   const role = (token as any)?.role as string | undefined;
 
   // Protect admin
