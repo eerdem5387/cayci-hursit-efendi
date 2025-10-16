@@ -4,8 +4,13 @@ import { auth } from "@/lib/auth";
 export default auth((req) => {
     const { pathname, origin, search } = req.nextUrl;
 
-    if (pathname === "/admin/setup") {
-        return NextResponse.next();
+  if (pathname === "/admin/setup") {
+    const res = NextResponse.next();
+    res.headers.set("x-middleware", "active");
+    return res;
+        const res = NextResponse.next();
+        res.headers.set("x-middleware", "active");
+        return res;
     }
 
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
@@ -33,7 +38,9 @@ export default auth((req) => {
         }
     }
 
-    return NextResponse.next();
+  const res = NextResponse.next();
+  res.headers.set("x-middleware", "active");
+  return res;
 });
 
 export const config = {
