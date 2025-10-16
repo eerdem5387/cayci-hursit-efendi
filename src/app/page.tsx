@@ -1,53 +1,27 @@
-"use client";
-import { motion } from "framer-motion";
 import Slider from "@/components/Slider";
 import { PopularTeas, Brands, AboutTeaser, Pillars, VideoBanner } from "@/components/Sections";
 
 export default function Home() {
   return (
     <div className="pb-12">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
+      <div className="animate-fade-in">
         <Slider />
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-      >
+      </div>
+      <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
         <PopularTeas />
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-      >
+      </div>
+      <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
         <Brands />
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
-      >
+      </div>
+      <div className="animate-fade-in" style={{ animationDelay: '0.6s' }}>
         <AboutTeaser />
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-      >
+      </div>
+      <div className="animate-fade-in" style={{ animationDelay: '0.8s' }}>
         <Pillars />
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 1.0 }}
-      >
+      </div>
+      <div className="animate-fade-in" style={{ animationDelay: '1.0s' }}>
         <VideoBanner />
-      </motion.div>
+      </div>
     </div>
   );
 }
