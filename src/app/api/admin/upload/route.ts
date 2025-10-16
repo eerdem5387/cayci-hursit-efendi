@@ -25,17 +25,24 @@ export async function POST(req: NextRequest) {
 
     // Vercel Blob varsa onu kullan
     if (process.env.BLOB_READ_WRITE_TOKEN) {
-        const blob = await put(rel, bytes, { access: "public", contentType: file.type || `image/${ext}` });
-        return NextResponse.json({ ok: true, path: blob.url });
+        try {
+            const blob = await put(rel, bytes, { access: "public", contentType: file.type || `image/${ext}`, token: process.env.BLOB_READ_WRITE_TOKEN });
+            return NextResponse.json({ ok: true, path: blob.url });
+        } catch (e: any) {
+            return NextResponse.json({ ok: false, error: e?.message || "Blob yükleme hatası" }, { status: 500 });
+        }
     }
 
     // Local/dev fallback
     const relLocal = `/${rel}`;
     const outPath = path.join(process.cwd(), "public", subdir);
     if (!fs.existsSync(outPath)) fs.mkdirSync(outPath, { recursive: true });
-    fs.writeFileSync(path.join(process.cwd(), "public", relLocal), bytes);
-
-    return NextResponse.json({ ok: true, path: relLocal });
+    try {
+        fs.writeFileSync(path.join(process.cwd(), "public", relLocal), bytes);
+        return NextResponse.json({ ok: true, path: relLocal });
+    } catch (e: any) {
+        return NextResponse.json({ ok: false, error: e?.message || "Dosya yazma hatası" }, { status: 500 });
+    }
 }
 
 
