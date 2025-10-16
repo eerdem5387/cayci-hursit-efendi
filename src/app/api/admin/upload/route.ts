@@ -26,7 +26,14 @@ export async function POST(req: NextRequest) {
     // Vercel Blob varsa onu kullan
     if (process.env.BLOB_READ_WRITE_TOKEN) {
         try {
-            const blob = await put(rel, bytes, { access: "public", contentType: file.type || `image/${ext}`, token: process.env.BLOB_READ_WRITE_TOKEN });
+            const useOverwrite = kind === "brand"; // Marka logoları aynı isimle güncellenir
+            const blob = await put(rel, bytes, {
+                access: "public",
+                contentType: file.type || `image/${ext}`,
+                token: process.env.BLOB_READ_WRITE_TOKEN,
+                allowOverwrite: useOverwrite,
+                addRandomSuffix: !useOverwrite,
+            });
             return NextResponse.json({ ok: true, path: blob.url });
         } catch (e: any) {
             return NextResponse.json({ ok: false, error: e?.message || "Blob yükleme hatası" }, { status: 500 });
