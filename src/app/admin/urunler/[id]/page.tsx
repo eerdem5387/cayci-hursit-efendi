@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, use } from "react";
 import Link from "next/link";
 
 type Brand = { id: string; name: string; slug: string };
-type Product = { id: string; name: string; slug: string; brandId?: string; price: number; popular?: boolean; description?: string; weightKg?: number | null; stock?: number; images?: string[] };
+type Product = { id: string; name: string; slug: string; brandId?: string; price: number; popular?: boolean; description?: string; weightKg?: number | null; stock?: number | null; images?: string[] };
 
 export default function ProductEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
