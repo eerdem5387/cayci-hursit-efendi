@@ -39,13 +39,13 @@ providers.push(
                 return null;
             }
 
-                const dbUser = await prisma.user.findUnique({ where: { email: credentials.email } });
-                if (!dbUser) return null;
-                if (dbUser.googleId) return null; // Google ile kayıtlı kullanıcı şifreyle giriş yapamaz
-                if (!dbUser.password) return null;
-                const isValid = await bcrypt.compare(String(credentials.password), String(dbUser.password));
-                if (!isValid) return null;
-                return { id: dbUser.id, email: dbUser.email, name: dbUser.name, role: dbUser.role } as any;
+            const dbUser = await prisma.user.findUnique({ where: { email: credentials.email } });
+            if (!dbUser) return null;
+            if (dbUser.googleId) return null; // Google ile kayıtlı kullanıcı şifreyle giriş yapamaz
+            if (!dbUser.password) return null;
+            const isValid = await bcrypt.compare(String(credentials.password), String(dbUser.password));
+            if (!isValid) return null;
+            return { id: dbUser.id, email: dbUser.email, name: dbUser.name, role: dbUser.role } as any;
         },
     })
 );

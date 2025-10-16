@@ -1,19 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readJson, writeJson, generateId } from "@/lib/store";
+import { prisma } from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
 import { getProducts, getSettings } from "@/lib/data";
 import { renderAdminOrderEmail, renderCustomerOrderEmail } from "@/lib/emails";
 
 type CartItem = { slug: string; qty: number };
-type Order = {
-    id: string;
-    createdAt: string;
-    customer: { ad: string; email: string; adres: string; sehir: string; telefon: string };
-    items: CartItem[];
-    status: "pending" | "paid" | "failed";
-    total: number;
-    customerName: string;
-};
 
 export async function POST(req: NextRequest) {
     const form = await req.formData();
@@ -27,9 +18,7 @@ export async function POST(req: NextRequest) {
     const sonKullanim = String(form.get("sonKullanim") || "");
     const cvv = String(form.get("cvv") || "");
 
-    const cart = readJson<CartItem[]>("cart.json", []);
-    const orders = readJson<Order[]>("orders.json", []);
-    const id = generateId("order");
+    const cart = await prisma.cartItem.findMany();
 
     // Toplam tutarı hesapla
     const products = getProducts();
@@ -39,18 +28,23 @@ export async function POST(req: NextRequest) {
         return sum + (price * item.qty);
     }, 0);
 
-    const order: Order = {
-        id,
-        createdAt: new Date().toISOString(),
-        customer: { ad, email, adres, sehir, telefon },
-        items: cart,
-        status: "pending",
-        total,
-        customerName: ad,
-    };
-    orders.push(order);
-    writeJson("orders.json", orders);
-    writeJson("cart.json", []);
+    const created = await prisma.order.create({
+        data: {
+            customerAd: ad,
+            customerEmail: email,
+            customerAdres: adres,
+            customerSehir: sehir,
+            customerTelefon: telefon,
+            status: "pending",
+            total,
+            customerName: ad,
+            items: {
+                create: cart.map((c) => ({ slug: c.slug, qty: c.qty })),
+            },
+        },
+        include: { items: true },
+    });
+    await prisma.cartItem.deleteMany();
 
     // E-posta bildirimleri
     const settings = getSettings();
@@ -58,8 +52,13 @@ export async function POST(req: NextRequest) {
     const customerTo = email;
     const nameMap = Object.fromEntries(products.map((p) => [p.slug, p.name]));
     const templOrder = {
-        ...order,
-        items: order.items.map((i) => ({ ...i, name: nameMap[i.slug], price: priceMap[i.slug] })),
+        id: created.id,
+        createdAt: created.createdAt.toISOString(),
+        customer: { ad, email, adres, sehir, telefon },
+        items: created.items.map((i) => ({ slug: i.slug, qty: i.qty, name: nameMap[i.slug], price: priceMap[i.slug] })),
+        status: created.status as any,
+        total: created.total,
+        customerName: created.customerName,
     };
     const adminHtml = renderAdminOrderEmail(templOrder as any, settings);
     const customerHtml = renderCustomerOrderEmail(templOrder as any, settings);
@@ -70,21 +69,28 @@ export async function POST(req: NextRequest) {
         // e-posta hatası siparişi engellemesin
     }
 
-    return NextResponse.json({ ok: true, orderId: id });
+    return NextResponse.json({ ok: true, orderId: created.id });
 }
 
 export async function GET() {
-    const orders = readJson<Order[]>("orders.json", []);
-    return NextResponse.json(orders);
+    const orders = await prisma.order.findMany({ include: { items: true }, orderBy: { createdAt: "desc" } });
+    const normalized = orders.map((o) => ({
+        id: o.id,
+        createdAt: o.createdAt,
+        customer: { ad: o.customerAd, email: o.customerEmail, adres: o.customerAdres, sehir: o.customerSehir, telefon: o.customerTelefon },
+        items: o.items.map((i) => ({ slug: i.slug, qty: i.qty })),
+        status: o.status as any,
+        total: o.total,
+        customerName: o.customerName,
+    }));
+    return NextResponse.json(normalized);
 }
 
 export async function PUT(req: NextRequest) {
     const { id, status } = await req.json();
-    const orders = readJson<Order[]>("orders.json", []);
-    const idx = orders.findIndex((o) => o.id === id);
-    if (idx === -1) return NextResponse.json({ ok: false }, { status: 404 });
-    orders[idx].status = status;
-    writeJson("orders.json", orders);
+    const exists = await prisma.order.findUnique({ where: { id } });
+    if (!exists) return NextResponse.json({ ok: false }, { status: 404 });
+    await prisma.order.update({ where: { id }, data: { status } });
     return NextResponse.json({ ok: true });
 }
 

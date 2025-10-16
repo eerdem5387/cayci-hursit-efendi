@@ -45,4 +45,32 @@ model Product {
   brand       Brand?   @relation(fields: [brandId], references: [id])
 }
 
+model Order {
+  id          String       @id @default(cuid())
+  createdAt   DateTime     @default(now())
+  customerAd  String
+  customerEmail String
+  customerAdres String
+  customerSehir String
+  customerTelefon String
+  status      String       @default("pending")
+  total       Float        @default(0)
+  customerName String
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id       String  @id @default(cuid())
+  orderId  String
+  slug     String
+  qty      Int
+  order    Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model CartItem {
+  id    String @id @default(cuid())
+  slug  String
+  qty   Int
+}
+
 
