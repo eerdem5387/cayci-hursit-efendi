@@ -8,6 +8,8 @@ type Product = { id: string; name: string };
 export default function HomeAdmin() {
   const [home, setHome] = useState<HomeContent | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
   const load = () => Promise.all([
     fetch("/api/admin/home").then((r) => r.json()).then(setHome),
@@ -16,7 +18,18 @@ export default function HomeAdmin() {
   useEffect(() => { load(); }, []);
 
   const save = async () => {
-    await fetch("/api/admin/home", { method: "PUT", body: JSON.stringify(home) });
+    if (!home) return;
+    setSaving(true);
+    setMessage("");
+    const res = await fetch("/api/admin/home", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(home) });
+    setSaving(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({} as any));
+      setMessage(data?.error || "Kaydedilemedi");
+      return;
+    }
+    setMessage("Kaydedildi");
+    setTimeout(() => setMessage(""), 2000);
   };
 
   if (!home) return <div>Yükleniyor...</div>;
@@ -78,8 +91,9 @@ export default function HomeAdmin() {
         </div>
       </section>
 
-      <div>
-        <button className="rounded bg-emerald-700 px-4 py-2 text-white" onClick={save}>Kaydet</button>
+      <div className="flex items-center gap-3">
+        <button className="rounded bg-emerald-700 px-4 py-2 text-white disabled:opacity-60" onClick={save} disabled={saving}> {saving ? "Kaydediliyor..." : "Kaydet"} </button>
+        {message && <span className={`text-sm ${message === "Kaydedildi" ? "text-emerald-700" : "text-red-700"}`}>{message}</span>}
       </div>
     </div>
   );
