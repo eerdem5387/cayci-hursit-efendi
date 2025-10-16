@@ -59,7 +59,7 @@ export default function Slider() {
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden bg-gradient-to-r ">
+    <section className="relative w-full overflow-hidden bg-gradient-to-r z-10">
       <div className="relative h-screen w-full overflow-hidden">
         <div className="absolute inset-0 flex h-full w-full transition-transform duration-700" style={{ transform: `translateX(-${index * 100}%)` }}>
           {slides.map((s) => (
