@@ -68,7 +68,7 @@ export default function Slider() {
             </div>
           ))}
         </div>
-        <div className="absolute inset-0 flex flex-col items-start justify-center px-20 text-white">
+        <div className="absolute inset-0 flex flex-col items-start justify-center px-20 text-white" style={{ top: '6rem' }}>
           {slides[index].eyebrow && (
             <div className="rounded-full bg-white/15 px-3 py-1 text-xs font-medium">{slides[index].eyebrow}</div>
           )}
