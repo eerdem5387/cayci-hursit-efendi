@@ -3,73 +3,89 @@ import { prisma } from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
 import { getProducts, getSettings } from "@/lib/data";
 import { renderAdminOrderEmail, renderCustomerOrderEmail } from "@/lib/emails";
+import { auth } from "@/lib/auth";
 
 type CartItem = { slug: string; qty: number };
 
 export async function POST(req: NextRequest) {
-    const form = await req.formData();
-    const ad = String(form.get("ad") || "");
-    const email = String(form.get("email") || "");
-    const adres = String(form.get("adres") || "");
-    const sehir = String(form.get("sehir") || "");
-    const telefon = String(form.get("telefon") || "");
-    const kartAd = String(form.get("kartAd") || "");
-    const kartNo = String(form.get("kartNo") || "");
-    const sonKullanim = String(form.get("sonKullanim") || "");
-    const cvv = String(form.get("cvv") || "");
-
-    const cart = await prisma.cartItem.findMany();
-
-    // Toplam tutarı hesapla
-    const products = await getProducts();
-    const priceMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.price]));
-    const total = cart.reduce((sum, item) => {
-        const price = priceMap[item.slug] || 0;
-        return sum + (price * item.qty);
-    }, 0);
-
-    const created = await prisma.order.create({
-        data: {
-            customerAd: ad,
-            customerEmail: email,
-            customerAdres: adres,
-            customerSehir: sehir,
-            customerTelefon: telefon,
-            status: "pending",
-            total,
-            customerName: ad,
-            items: {
-                create: cart.map((c) => ({ slug: c.slug, qty: c.qty })),
-            },
-        },
-        include: { items: true },
-    });
-    await prisma.cartItem.deleteMany();
-
-    // E-posta bildirimleri
-    const settings = await getSettings();
-    const adminTo = settings.notifications?.adminEmail || settings.smtp.from || "";
-    const customerTo = email;
-    const nameMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.name]));
-    const templOrder = {
-        id: created.id,
-        createdAt: created.createdAt.toISOString(),
-        customer: { ad, email, adres, sehir, telefon },
-        items: created.items.map((i) => ({ slug: i.slug, qty: i.qty, name: nameMap[i.slug], price: priceMap[i.slug] })),
-        status: created.status as any,
-        total: created.total,
-        customerName: created.customerName,
-    };
-    const adminHtml = renderAdminOrderEmail(templOrder as any, settings);
-    const customerHtml = renderCustomerOrderEmail(templOrder as any, settings);
     try {
-        if (adminTo) await sendMail(adminTo, "Yeni siparişiniz var", adminHtml);
-        if (customerTo) await sendMail(customerTo, "Siparişiniz oluşturuldu", customerHtml);
-    } catch (e) {
-        // e-posta hatası siparişi engellemesin
-    }
+        const form = await req.formData();
+        let ad = String(form.get("ad") || "");
+        let email = String(form.get("email") || "");
+        const adres = String(form.get("adres") || "");
+        const sehir = String(form.get("sehir") || "");
+        const telefon = String(form.get("telefon") || "");
+        const kartAd = String(form.get("kartAd") || "");
+        const kartNo = String(form.get("kartNo") || "");
+        const sonKullanim = String(form.get("sonKullanim") || "");
+        const cvv = String(form.get("cvv") || "");
 
-    return NextResponse.json({ ok: true, orderId: created.id });
+        // Oturum açmış kullanıcı varsa formdaki ad/e‑posta yerine hesabını kullan
+        const session = await auth();
+        if (session?.user) {
+            ad = String(session.user.name || ad);
+            email = String(session.user.email || email);
+        }
+
+        const cart = await prisma.cartItem.findMany();
+        if (!cart.length) {
+            return NextResponse.json({ ok: false, error: "Sepet boş" }, { status: 400 });
+        }
+
+        // Toplam tutarı hesapla
+        const products = await getProducts();
+        const priceMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.price]));
+        const total = cart.reduce((sum, item) => {
+            const price = priceMap[item.slug] || 0;
+            return sum + (price * item.qty);
+        }, 0);
+
+        const created = await prisma.order.create({
+            data: {
+                customerAd: ad,
+                customerEmail: email,
+                customerAdres: adres,
+                customerSehir: sehir,
+                customerTelefon: telefon,
+                status: "pending",
+                total,
+                customerName: ad,
+                items: {
+                    create: cart.map((c) => ({ slug: c.slug, qty: c.qty })),
+                },
+            },
+            include: { items: true },
+        });
+        await prisma.cartItem.deleteMany();
+
+        // E-posta bildirimleri
+        const settings = await getSettings();
+        const adminTo = settings.notifications?.adminEmail || settings.smtp.from || "";
+        const customerTo = email;
+        const nameMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.name]));
+        const templOrder = {
+            id: created.id,
+            createdAt: created.createdAt.toISOString(),
+            customer: { ad, email, adres, sehir, telefon },
+            items: created.items.map((i) => ({ slug: i.slug, qty: i.qty, name: nameMap[i.slug], price: priceMap[i.slug] })),
+            status: created.status as any,
+            total: created.total,
+            customerName: created.customerName,
+        };
+        const adminHtml = renderAdminOrderEmail(templOrder as any, settings);
+        const customerHtml = renderCustomerOrderEmail(templOrder as any, settings);
+        try {
+            if (adminTo) await sendMail(adminTo, "Yeni siparişiniz var", adminHtml);
+            if (customerTo) await sendMail(customerTo, "Siparişiniz oluşturuldu", customerHtml);
+        } catch (e) {
+            // e-posta hatası siparişi engellemesin
+        }
+
+        return NextResponse.json({ ok: true, orderId: created.id });
+    } catch (e: any) {
+        console.error("/api/orders failed:", e);
+        return NextResponse.json({ ok: false, error: e?.message || "Hata" }, { status: 500 });
+    }
 }
 
 export async function GET(req: NextRequest) {
