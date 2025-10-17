@@ -1,13 +1,32 @@
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com";
+
 export function renderOrderConfirmation(params: { orderId: string; trackingUrl?: string }) {
-  return `
-    <div style="font-family: Arial, sans-serif;">
-      <h2>Hasılat: Siparişiniz Alındı</h2>
-      <p>Merhaba, siparişiniz başarıyla oluşturuldu.</p>
-      <p><strong>Sipariş No:</strong> ${params.orderId}</p>
-      ${params.trackingUrl ? `<p>Siparişinizi buradan takip edebilirsiniz: <a href="${params.trackingUrl}">${params.trackingUrl}</a></p>` : ""}
-      <p>Teşekkür ederiz.</p>
+  const tracking = params.trackingUrl || `${SITE_URL}/siparis-takip/${params.orderId}`;
+  return `<!doctype html><html><head><meta charSet="utf-8"/>
+  <style>
+    body{background:#f6f7f9;margin:0;padding:24px;font-family:'Segoe UI',Arial,sans-serif;color:#0f172a}
+    .card{max-width:640px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb}
+    .hdr{background:#065f46;color:#fff;padding:20px}
+    .hdr h1{margin:0;font-size:20px}
+    .content{padding:20px}
+    .muted{color:#64748b}
+    .cta{display:inline-block;background:#065f46;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px}
+    .foot{padding:16px;text-align:center;font-size:12px;color:#64748b}
+  </style>
+  </head><body>
+    <div class="card">
+      <div class="hdr"><h1>Siparişiniz Alındı</h1></div>
+      <div class="content">
+        <p>Merhaba, siparişiniz başarıyla oluşturuldu.</p>
+        <p><strong>Sipariş No:</strong> ${params.orderId}</p>
+        <p style="margin-top:16px">
+          <a class="cta" href="${tracking}">Siparişinizi Takip Edin</a>
+        </p>
+        <p class="muted" style="margin-top:12px">Bağlantı çalışmıyorsa: <a href="${tracking}">${tracking}</a></p>
+      </div>
+      <div class="foot">${SITE_URL.replace(/^https?:\/\//, "")} tarafından gönderildi</div>
     </div>
-  `;
+  </body></html>`;
 }
 
 import { HomeContent, Settings } from "@/lib/data";
@@ -41,6 +60,7 @@ export function renderAdminOrderEmail(order: OrderLite, settings: Settings) {
       <td>${i.qty}</td>
       <td>${typeof i.price === "number" ? i.price.toLocaleString("tr-TR", { style: "currency", currency: "TRY" }) : "-"}</td>
     </tr>`).join("");
+    const adminUrl = `${SITE_URL}/admin/siparisler`;
     return `<!doctype html><html><head><meta charSet="utf-8"/><style>${style()}</style></head><body>
     <div class="card">
       <div class="hdr"><h1>${title} – Yeni Sipariş</h1></div>
@@ -56,7 +76,7 @@ export function renderAdminOrderEmail(order: OrderLite, settings: Settings) {
           <tbody>${rows}</tbody>
         </table>
         <p style="margin-top:16px">
-          <a class="cta" href="/admin/siparisler">Panelde Gör</a>
+          <a class="cta" href="${adminUrl}">Panelde Gör</a>
         </p>
       </div>
       <div class="foot">Bu e-posta ${title} tarafından otomatik gönderildi.</div>
@@ -71,6 +91,7 @@ export function renderCustomerOrderEmail(order: OrderLite, settings: Settings) {
       <td>${i.qty}</td>
       <td>${typeof i.price === "number" ? i.price.toLocaleString("tr-TR", { style: "currency", currency: "TRY" }) : "-"}</td>
     </tr>`).join("");
+    const trackingUrl = `${SITE_URL}/siparis-takip/${order.id}`;
     return `<!doctype html><html><head><meta charSet="utf-8"/><style>${style()}</style></head><body>
     <div class="card">
       <div class="hdr"><h1>${title} – Siparişiniz Oluşturuldu</h1></div>
@@ -82,7 +103,10 @@ export function renderCustomerOrderEmail(order: OrderLite, settings: Settings) {
           <thead><tr><th>Ürün</th><th>Adet</th><th>Fiyat</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
-        <p style="margin-top:16px" class="muted">Herhangi bir sorunuz olursa bu e-postayı yanıtlayabilirsiniz.</p>
+        <p style="margin-top:16px">
+          <a class="cta" href="${trackingUrl}">Siparişini Takip Et</a>
+        </p>
+        <p style="margin-top:8px" class="muted">Herhangi bir sorunuz olursa bu e-postayı yanıtlayabilirsiniz.</p>
       </div>
       <div class="foot">Teşekkür ederiz. ${title}</div>
     </div>
