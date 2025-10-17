@@ -1,6 +1,6 @@
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com";
 
-export function renderOrderConfirmation(params: { orderId: string; trackingUrl?: string }) {
+export function renderOrderConfirmation(params: { orderId: string; trackingUrl?: string; items?: { name?: string; slug: string; qty: number; price?: number }[] }) {
   const tracking = params.trackingUrl || `${SITE_URL}/siparis-takip/${params.orderId}`;
   return `<!doctype html><html><head><meta charSet="utf-8"/>
   <style>
@@ -12,6 +12,8 @@ export function renderOrderConfirmation(params: { orderId: string; trackingUrl?:
     .muted{color:#64748b}
     .cta{display:inline-block;background:#065f46;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px}
     .foot{padding:16px;text-align:center;font-size:12px;color:#64748b}
+    .table{width:100%;border-collapse:collapse;margin-top:12px}
+    .table th,.table td{border-bottom:1px solid #e5e7eb;padding:8px;text-align:left;font-size:14px}
   </style>
   </head><body>
     <div class="card">
@@ -19,6 +21,14 @@ export function renderOrderConfirmation(params: { orderId: string; trackingUrl?:
       <div class="content">
         <p>Merhaba, siparişiniz başarıyla oluşturuldu.</p>
         <p><strong>Sipariş No:</strong> ${params.orderId}</p>
+        ${Array.isArray(params.items) && params.items.length ? `
+        <table class="table">
+          <thead><tr><th>Ürün</th><th>Adet</th><th>Fiyat</th></tr></thead>
+          <tbody>
+            ${params.items.map(i => `<tr><td>${i.name || i.slug}</td><td>${i.qty}</td><td>${typeof i.price === 'number' ? i.price.toLocaleString('tr-TR',{style:'currency',currency:'TRY'}) : '-'}</td></tr>`).join("")}
+          </tbody>
+        </table>
+        ` : ''}
         <p style="margin-top:16px">
           <a class="cta" href="${tracking}">Siparişinizi Takip Edin</a>
         </p>

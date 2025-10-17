@@ -90,6 +90,11 @@ export async function POST(req: NextRequest) {
         try {
             if (adminTo) await sendMail(adminTo, "Yeni siparişiniz var", adminHtml);
             if (customerTo) await sendMail(customerTo, "Siparişiniz oluşturuldu", customerHtml);
+            // Minimal confirmation mail for some providers
+            try {
+                const trackingUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com"}/siparis-takip/${templOrder.id}`;
+                await sendMail(customerTo, "Siparişiniz Alındı", renderOrderConfirmation({ orderId: templOrder.id, trackingUrl, items: templOrder.items as any }));
+            } catch {}
         } catch (e) {
             // e-posta hatası siparişi engellemesin
         }

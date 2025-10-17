@@ -63,9 +63,14 @@ export async function POST(req: NextRequest) {
 
     // E-posta bildirimi (errors swallowed to not block checkout)
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com";
       const trackingUrl = token ? `${baseUrl}/siparis-takip/${token}` : undefined;
-      await sendMail(data.email, "Siparişiniz Alındı", renderOrderConfirmation({ orderId: created.id, trackingUrl }));
+      const items = Array.isArray(data.items) ? data.items.map((i: any) => ({ slug: String(i.slug), qty: Number(i.qty || 0) })).filter((i: any) => i.slug && i.qty > 0) : [];
+      await sendMail(
+        data.email,
+        "Siparişiniz Alındı",
+        renderOrderConfirmation({ orderId: created.id, trackingUrl, items })
+      );
     } catch (_) { }
 
     return NextResponse.json({ ok: true, orderId: created.id, trackingToken: token });
