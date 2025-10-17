@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
 import { getProducts, getSettings } from "@/lib/data";
-import { renderAdminOrderEmail, renderCustomerOrderEmail } from "@/lib/emails";
+import { renderAdminOrderEmail, renderCustomerOrderEmail, renderCustomerOrderStatusEmail } from "@/lib/emails";
 import { auth } from "@/lib/auth";
 
 type CartItem = { slug: string; qty: number };
@@ -142,10 +142,35 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-    const { id, status } = await req.json();
-    const exists = await prisma.order.findUnique({ where: { id } });
-    if (!exists) return NextResponse.json({ ok: false }, { status: 404 });
+    const { id, status, reason } = await req.json();
+    const exists = await prisma.order.findUnique({ where: { id }, include: { items: true } });
+    if (!exists) return NextResponse.json({ ok: false, error: "Sipariş bulunamadı" }, { status: 404 });
+
+    // Başarısız durumunda açıklama zorunlu
+    if (status === "basarisiz" && !reason) {
+        return NextResponse.json({ ok: false, error: "Başarısız durum için neden girilmelidir" }, { status: 400 });
+    }
+
     await prisma.order.update({ where: { id }, data: { status } });
+
+    // Müşteriye durum e-postası gönder
+    try {
+        const settings = await getSettings();
+        const products = await getProducts();
+        const priceMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.price]));
+        const nameMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.name]));
+        const templOrder = {
+            id: exists.id,
+            createdAt: exists.createdAt.toISOString(),
+            customer: { ad: exists.customerAd, email: exists.customerEmail, adres: exists.customerAdres, sehir: exists.customerSehir, telefon: exists.customerTelefon },
+            items: exists.items.map((i) => ({ slug: i.slug, qty: i.qty, name: nameMap[i.slug], price: priceMap[i.slug] })),
+        } as any;
+        const html = renderCustomerOrderStatusEmail(templOrder, settings, { status, reason });
+        if (exists.customerEmail) await sendMail(exists.customerEmail, "Sipariş Durumu Güncellendi", html);
+    } catch (e) {
+        // e-posta hatası yönetimi: sipariş güncellemeyi engellemesin
+    }
+
     return NextResponse.json({ ok: true });
 }
 

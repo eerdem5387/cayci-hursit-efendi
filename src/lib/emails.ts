@@ -123,4 +123,48 @@ export function renderCustomerOrderEmail(order: OrderLite, settings: Settings) {
   </body></html>`;
 }
 
+export function renderCustomerOrderStatusEmail(
+  order: OrderLite,
+  settings: Settings,
+  params: { status: "onaylandi" | "kargoda" | "teslim_edildi" | "basarisiz"; reason?: string }
+) {
+  const title = settings.site?.title || "Çaycı Hurşit Efendi";
+  const rows = order.items
+    .map(
+      (i) => `<tr><td>${i.name || i.slug}</td><td>${i.qty}</td><td>${typeof i.price === "number" ? i.price.toLocaleString("tr-TR", { style: "currency", currency: "TRY" }) : "-"}</td></tr>`
+    )
+    .join("");
+  const trackingUrl = `${SITE_URL}/siparis-takip/${order.id}`;
+  const human =
+    params.status === "onaylandi"
+      ? "Siparişiniz onaylandı"
+      : params.status === "kargoda"
+      ? "Siparişiniz kargoya verildi"
+      : params.status === "teslim_edildi"
+      ? "Siparişiniz teslim edildi"
+      : "Siparişiniz işleme alınamadı";
+  const reasonBlock =
+    params.status === "basarisiz" && params.reason
+      ? `<div style="margin-top:12px;padding:12px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:8px">
+           <strong>Neden:</strong> ${params.reason}
+         </div>`
+      : "";
+
+  return `<!doctype html><html><head><meta charSet="utf-8"/><style>${style()}</style></head><body>
+    <div class="card">
+      <div class="hdr"><h1>${title} – ${human}</h1></div>
+      <div class="content">
+        <p><strong>Sipariş ID:</strong> ${order.id}<br/>
+        <span class="muted">${new Date(order.createdAt).toLocaleString("tr-TR")}</span></p>
+        <table class="table"><thead><tr><th>Ürün</th><th>Adet</th><th>Fiyat</th></tr></thead><tbody>${rows}</tbody></table>
+        ${reasonBlock}
+        <p style="margin-top:16px">
+          <a class="cta" href="${trackingUrl}">Siparişini Takip Et</a>
+        </p>
+      </div>
+      <div class="foot">Teşekkür ederiz. ${title}</div>
+    </div>
+  </body></html>`;
+}
+
 
