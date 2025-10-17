@@ -58,6 +58,15 @@ model Order {
   total       Float        @default(0)
   customerName String
   items       OrderItem[]
+  /// Guest checkout support (backward-compatible additions)
+  isGuest       Boolean      @default(false)
+  contactEmail  String?
+  trackingToken String?      @unique
+  userId        String?
+  shippingJson  Json?
+  billingJson   Json?
+  clientIp      String?
+  userAgent     String?
 }
 
 model OrderItem {

@@ -8,6 +8,7 @@ type Order = {
   customer: { ad: string; email: string; adres: string; sehir: string; telefon: string };
   items: { slug: string; qty: number }[];
   status: "pending" | "paid" | "failed";
+  isGuest?: boolean;
 };
 
 type Product = { id: string; name: string; slug: string; price: number; weightKg?: number | null };
@@ -69,7 +70,10 @@ export default function OrdersAdmin() {
               </select>
             </div>
             <div className="mt-2 text-sm">
-              <div>Müşteri: {o.customer.ad} – {o.customer.email} – {o.customer.telefon}</div>
+              <div>
+                Müşteri: {o.customer.ad} – {o.customer.email} – {o.customer.telefon}
+                {o.isGuest && <span className="ml-2 rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Guest</span>}
+              </div>
               <div>Adres: {o.customer.adres}, {o.customer.sehir}</div>
             </div>
             <div className="mt-3 space-y-2">

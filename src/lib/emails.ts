@@ -1,3 +1,15 @@
+export function renderOrderConfirmation(params: { orderId: string; trackingUrl?: string }) {
+  return `
+    <div style="font-family: Arial, sans-serif;">
+      <h2>Hasılat: Siparişiniz Alındı</h2>
+      <p>Merhaba, siparişiniz başarıyla oluşturuldu.</p>
+      <p><strong>Sipariş No:</strong> ${params.orderId}</p>
+      ${params.trackingUrl ? `<p>Siparişinizi buradan takip edebilirsiniz: <a href="${params.trackingUrl}">${params.trackingUrl}</a></p>` : ""}
+      <p>Teşekkür ederiz.</p>
+    </div>
+  `;
+}
+
 import { HomeContent, Settings } from "@/lib/data";
 
 type OrderLite = {

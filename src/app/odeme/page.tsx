@@ -9,6 +9,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [agreeGuest, setAgreeGuest] = useState(false);
   const [formData, setFormData] = useState({
     ad: "",
     email: "",
@@ -64,12 +65,48 @@ export default function CheckoutPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.email) {
+      alert("Lütfen e‑posta adresinizi giriniz.");
+      return;
+    }
+    if (!agreeGuest) {
+      alert("Lütfen üye olmadan devam ettiğinizi onaylayın.");
+      return;
+    }
+
     setSubmitting(true);
-    const form = e.target as HTMLFormElement;
-    const fd = new FormData(form);
-    await fetch("/api/orders", { method: "POST", body: fd });
-    setSubmitting(false);
-    window.location.href = "/tesekkurler";
+    try {
+      const payload = {
+        name: formData.ad,
+        email: formData.email,
+        phone: formData.telefon,
+        address: formData.adres,
+        city: formData.sehir,
+        items: cartItems.map(ci => ({ slug: ci.slug, qty: ci.qty })),
+        total,
+        shipping: {
+          name: formData.ad,
+          phone: formData.telefon,
+          address: formData.adres,
+          city: formData.sehir,
+        },
+      };
+      const res = await fetch("/api/orders/guest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({} as any));
+        throw new Error(err?.error || "Sipariş oluşturulamadı");
+      }
+      const data = await res.json();
+      window.location.href = "/tesekkurler?guest=1&oid=" + encodeURIComponent(data.orderId);
+    } catch (err: any) {
+      alert(err?.message || "Bir hata oluştu");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (cartItems.length === 0) {
@@ -157,6 +194,12 @@ export default function CheckoutPage() {
                     required 
                   />
                 </div>
+              </div>
+              <div className="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-amber-900">
+                <input id="guest-ok" type="checkbox" className="mt-1" checked={agreeGuest} onChange={(e)=>setAgreeGuest(e.target.checked)} />
+                <label htmlFor="guest-ok" className="text-sm">
+                  Üye olmadan devam ettiğimin farkındayım. Siparişimi e‑posta yoluyla takip edeceğim.
+                </label>
               </div>
             </div>
 

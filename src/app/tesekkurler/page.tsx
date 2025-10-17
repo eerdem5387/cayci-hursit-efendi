@@ -1,5 +1,24 @@
 import Link from "next/link";
 
+export default function ThankYouPage({ searchParams }: { searchParams?: Promise<{ guest?: string; oid?: string }> }) {
+  const spPromise = searchParams || Promise.resolve({});
+  // Not using suspense; simple hydration-safe
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-16 text-center md:px-6">
+      <h1 className="text-3xl font-extrabold text-emerald-900">Siparişiniz Alındı</h1>
+      <p className="mt-3 text-gray-700">Sipariş onayı e‑postanıza gönderildi.</p>
+      <div className="mt-8">
+        <Link href="/" className="rounded-lg bg-emerald-700 px-5 py-2 text-white hover:bg-emerald-800">Anasayfaya Dön</Link>
+      </div>
+      <div className="mt-6 text-sm text-gray-600">
+        Üye olmadan verdiyseniz, e‑postanızdaki bağlantıdan siparişinizi takip edebilirsiniz.
+      </div>
+    </div>
+  );
+}
+
+import Link from "next/link";
+
 export default function ThanksPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 md:px-6">
