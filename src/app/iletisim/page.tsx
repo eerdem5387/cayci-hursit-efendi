@@ -43,6 +43,17 @@ export default function ContactPage() {
           <div className="mt-4 space-y-1 text-gray-800">
             <div>T: 0 (539) 850 72 53</div>
             <div>E: info@caycihursitefendi.com</div>
+            <div className="pt-2">
+              <a
+                href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP?.replace(/[^\d]/g, "") || "905555555555"}?text=${encodeURIComponent("Merhaba, destek almak istiyorum.")}`}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img src="/images/whatsapp.svg" alt="WhatsApp" className="h-4 w-4" /> WhatsApp Destek
+              </a>
+              <div className="mt-1 text-xs text-gray-600">{process.env.NEXT_PUBLIC_WHATSAPP || "+90 555 555 55 55"}</div>
+            </div>
           </div>
         </motion.div>
         <motion.div variants={itemVariants} className="rounded-2xl border border-emerald-100 bg-white p-6">

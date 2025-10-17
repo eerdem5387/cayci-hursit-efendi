@@ -46,6 +46,17 @@ export default function RootLayout({
             <PageTransition>{children}</PageTransition>
           </main>
           <Footer />
+          {/* Floating WhatsApp button */}
+          <a
+            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP?.replace(/[^\d]/g, "") || "905555555555"}?text=${encodeURIComponent("Merhaba, destek almak istiyorum.")}`}
+            className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-3 text-white shadow-lg transition hover:bg-emerald-700"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="WhatsApp Destek"
+          >
+            <img src="/images/whatsapp.svg" alt="WhatsApp" className="h-5 w-5" />
+            <span className="hidden md:inline">WhatsApp</span>
+          </a>
         </Providers>
       </body>
     </html>
