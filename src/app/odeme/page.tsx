@@ -1,11 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 type CartItem = { slug: string; qty: number };
 type Product = { id: string; name: string; slug: string; price: number; weightKg?: number | null; images?: string[] };
 
 export default function CheckoutPage() {
+  const { data: session } = useSession();
   const [submitting, setSubmitting] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -57,6 +59,20 @@ export default function CheckoutPage() {
     fetch("/api/products").then(r => r.json()).then(setProducts);
   }, []);
 
+  // Oturum açmış kullanıcı varsa ad ve e-postayı doldur
+  useEffect(() => {
+    const user = (session as any)?.user;
+    if (user) {
+      setFormData((fd) => ({
+        ...fd,
+        ad: user.name || fd.ad,
+        email: user.email || fd.email,
+      }));
+      // Checkbox görünmeyecek; validasyon takılmaması için true
+      setAgreeGuest(true);
+    }
+  }, [session]);
+
   const getProduct = (slug: string) => products.find(p => p.slug === slug);
   const total = cartItems.reduce((sum, item) => {
     const product = getProduct(item.slug);
@@ -69,39 +85,57 @@ export default function CheckoutPage() {
       alert("Lütfen e‑posta adresinizi giriniz.");
       return;
     }
-    if (!agreeGuest) {
+    const isLoggedIn = !!(session as any)?.user;
+    if (!isLoggedIn && !agreeGuest) {
       alert("Lütfen üye olmadan devam ettiğinizi onaylayın.");
       return;
     }
 
     setSubmitting(true);
     try {
-      const payload = {
-        name: formData.ad,
-        email: formData.email,
-        phone: formData.telefon,
-        address: formData.adres,
-        city: formData.sehir,
-        items: cartItems.map(ci => ({ slug: ci.slug, qty: ci.qty })),
-        total,
-        shipping: {
+      const isLoggedIn = !!(session as any)?.user;
+      let res: Response;
+      if (isLoggedIn) {
+        const fd = new FormData();
+        fd.set("ad", formData.ad);
+        fd.set("email", formData.email);
+        fd.set("telefon", formData.telefon);
+        fd.set("sehir", formData.sehir);
+        fd.set("adres", formData.adres);
+        fd.set("kartAd", formData.kartAd);
+        fd.set("kartNo", formData.kartNo);
+        fd.set("sonKullanim", formData.sonKullanim);
+        fd.set("cvv", formData.cvv);
+        res = await fetch("/api/orders", { method: "POST", body: fd });
+      } else {
+        const payload = {
           name: formData.ad,
+          email: formData.email,
           phone: formData.telefon,
           address: formData.adres,
           city: formData.sehir,
-        },
-      };
-      const res = await fetch("/api/orders/guest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+          items: cartItems.map(ci => ({ slug: ci.slug, qty: ci.qty })),
+          total,
+          shipping: {
+            name: formData.ad,
+            phone: formData.telefon,
+            address: formData.adres,
+            city: formData.sehir,
+          },
+        };
+        res = await fetch("/api/orders/guest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
       if (!res.ok) {
         const err = await res.json().catch(() => ({} as any));
         throw new Error(err?.error || "Sipariş oluşturulamadı");
       }
       const data = await res.json();
-      window.location.href = "/tesekkurler?guest=1&oid=" + encodeURIComponent(data.orderId);
+      const guestFlag = isLoggedIn ? "0" : "1";
+      window.location.href = "/tesekkurler?guest=" + guestFlag + "&oid=" + encodeURIComponent(data.orderId);
     } catch (err: any) {
       alert(err?.message || "Bir hata oluştu");
     } finally {
@@ -141,6 +175,7 @@ export default function CheckoutPage() {
                     value={formData.ad}
                     onChange={(e) => setFormData({...formData, ad: e.target.value})}
                     required 
+                    readOnly={!!session}
                   />
                 </div>
                 <div>
@@ -153,6 +188,7 @@ export default function CheckoutPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     required 
+                    readOnly={!!session}
                   />
                 </div>
                 <div>
@@ -195,12 +231,14 @@ export default function CheckoutPage() {
                   />
                 </div>
               </div>
-              <div className="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-amber-900">
-                <input id="guest-ok" type="checkbox" className="mt-1" checked={agreeGuest} onChange={(e)=>setAgreeGuest(e.target.checked)} />
-                <label htmlFor="guest-ok" className="text-sm">
-                  Üye olmadan devam ettiğimin farkındayım. Siparişimi e‑posta yoluyla takip edeceğim.
-                </label>
-              </div>
+              {!session && (
+                <div className="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-amber-900">
+                  <input id="guest-ok" type="checkbox" className="mt-1" checked={agreeGuest} onChange={(e)=>setAgreeGuest(e.target.checked)} />
+                  <label htmlFor="guest-ok" className="text-sm">
+                    Üye olmadan devam ettiğimin farkındayım. Siparişimi e‑posta yoluyla takip edeceğim.
+                  </label>
+                </div>
+              )}
             </div>
 
             <div className="rounded-xl border border-gray-200 bg-white p-6">
