@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ ok: true, orderId: created.id, trackingToken: (created as any)?.trackingToken || null });
     } catch (e: any) {
+        console.error("/api/orders/guest failed:", e);
         return NextResponse.json({ ok: false, error: e?.message || "Hata" }, { status: 500 });
     }
 }
