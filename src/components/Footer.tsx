@@ -41,6 +41,17 @@ export default function Footer() {
             <li><Link href="/kvkk-aydinlatma-metni" className="text-white hover:text-emerald-700">KVKK Aydınlatma Metni</Link></li>
             <li><Link href="/iade-iptal-kosullari" className="text-white hover:text-emerald-700">İade ve İptal Koşulları</Link></li>
           </ul>
+          <div className="mt-4">
+            <a
+              href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP?.replace(/[^\d]/g, "") || "905555555555"}?text=${encodeURIComponent("Merhaba, destek almak istiyorum.")}`}
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img src="/images/whatsapp.svg" alt="WhatsApp" className="h-4 w-4" /> WhatsApp Destek
+            </a>
+            <div className="mt-1 text-xs text-emerald-100">{process.env.NEXT_PUBLIC_WHATSAPP || "+90 555 555 55 55"}</div>
+          </div>
         </div>
       </div>
       <div className="border-t text-white bg-gray-50">
