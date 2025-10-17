@@ -54,7 +54,20 @@ export async function POST(req: NextRequest) {
                     create: cart.map((c) => ({ slug: c.slug, qty: c.qty })),
                 },
             },
-            include: { items: true },
+            // Select only base columns that exist in both legacy and new schemas
+            select: {
+                id: true,
+                createdAt: true,
+                status: true,
+                total: true,
+                customerName: true,
+                customerAd: true,
+                customerEmail: true,
+                customerAdres: true,
+                customerSehir: true,
+                customerTelefon: true,
+                items: { select: { id: true, slug: true, qty: true } },
+            },
         });
         await prisma.cartItem.deleteMany();
 
@@ -65,7 +78,7 @@ export async function POST(req: NextRequest) {
         const nameMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.name]));
         const templOrder = {
             id: created.id,
-            createdAt: created.createdAt.toISOString(),
+            createdAt: (created as any).createdAt.toISOString(),
             customer: { ad, email, adres, sehir, telefon },
             items: created.items.map((i) => ({ slug: i.slug, qty: i.qty, name: nameMap[i.slug], price: priceMap[i.slug] })),
             status: created.status as any,
