@@ -18,8 +18,10 @@ export async function POST(req: NextRequest) {
         const total = Number(data.total || 0);
         const token = createTrackingToken();
 
-    const created = await prisma.order.create({
-            data: {
+    let created;
+    try {
+      created = await prisma.order.create({
+        data: {
                 customerAd: data.name || "",
                 customerEmail: data.email,
                 customerAdres: data.address || "",
@@ -35,17 +37,32 @@ export async function POST(req: NextRequest) {
                 billingJson: data.billing || undefined,
         clientIp: req.headers.get("x-forwarded-for") || undefined,
                 userAgent: req.headers.get("user-agent") || undefined,
-            },
-        });
+        },
+      });
+    } catch (err: any) {
+      // Fallback: production DB henüz migrate edilmemiş olabilir
+      created = await prisma.order.create({
+        data: {
+          customerAd: data.name || "",
+          customerEmail: data.email,
+          customerAdres: data.address || "",
+          customerSehir: data.city || "",
+          customerTelefon: data.phone || "",
+          customerName: data.name || "",
+          total,
+          status: "pending",
+        },
+      });
+    }
 
     // E-posta bildirimi (errors swallowed to not block checkout)
     try {
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-      const trackingUrl = created.trackingToken ? `${baseUrl}/siparis-takip/${created.trackingToken}` : undefined;
+      const trackingUrl = (created as any)?.trackingToken ? `${baseUrl}/siparis-takip/${(created as any).trackingToken}` : undefined;
       await sendMail(data.email, "Siparişiniz Alındı", renderOrderConfirmation({ orderId: created.id, trackingUrl }));
     } catch (_) {}
 
-        return NextResponse.json({ ok: true, orderId: created.id, trackingToken: token });
+        return NextResponse.json({ ok: true, orderId: created.id, trackingToken: (created as any)?.trackingToken || null });
     } catch (e: any) {
         return NextResponse.json({ ok: false, error: e?.message || "Hata" }, { status: 500 });
     }
