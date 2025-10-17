@@ -18,51 +18,43 @@ export async function POST(req: NextRequest) {
         const total = Number(data.total || 0);
         const token = createTrackingToken();
 
-    let created;
+    // Her zaman minimum alanlarla oluştur (prod DB şeması farklı olabilir)
+    const created = await prisma.order.create({
+      data: {
+        customerAd: data.name || "",
+        customerEmail: data.email,
+        customerAdres: data.address || "",
+        customerSehir: data.city || "",
+        customerTelefon: data.phone || "",
+        customerName: data.name || "",
+        total,
+        status: "pending",
+      },
+    });
+    // Yeni kolonlar varsa güncellemeyi dene (yoksa sessizce geç)
     try {
-      created = await prisma.order.create({
+      await prisma.order.update({
+        where: { id: created.id },
         data: {
-                customerAd: data.name || "",
-                customerEmail: data.email,
-                customerAdres: data.address || "",
-                customerSehir: data.city || "",
-                customerTelefon: data.phone || "",
-                customerName: data.name || "",
-                total,
-                status: "pending",
-                isGuest: true,
-                contactEmail: data.email,
-                trackingToken: token,
-                shippingJson: data.shipping || undefined,
-                billingJson: data.billing || undefined,
-        clientIp: req.headers.get("x-forwarded-for") || undefined,
-                userAgent: req.headers.get("user-agent") || undefined,
+          isGuest: true as any,
+          contactEmail: data.email as any,
+          trackingToken: token as any,
+          shippingJson: (data.shipping || undefined) as any,
+          billingJson: (data.billing || undefined) as any,
+          clientIp: (req.headers.get("x-forwarded-for") || undefined) as any,
+          userAgent: (req.headers.get("user-agent") || undefined) as any,
         },
       });
-    } catch (err: any) {
-      // Fallback: production DB henüz migrate edilmemiş olabilir
-      created = await prisma.order.create({
-        data: {
-          customerAd: data.name || "",
-          customerEmail: data.email,
-          customerAdres: data.address || "",
-          customerSehir: data.city || "",
-          customerTelefon: data.phone || "",
-          customerName: data.name || "",
-          total,
-          status: "pending",
-        },
-      });
-    }
+    } catch (_) {}
 
     // E-posta bildirimi (errors swallowed to not block checkout)
     try {
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-      const trackingUrl = (created as any)?.trackingToken ? `${baseUrl}/siparis-takip/${(created as any).trackingToken}` : undefined;
+      const trackingUrl = token ? `${baseUrl}/siparis-takip/${token}` : undefined;
       await sendMail(data.email, "Siparişiniz Alındı", renderOrderConfirmation({ orderId: created.id, trackingUrl }));
     } catch (_) {}
 
-        return NextResponse.json({ ok: true, orderId: created.id, trackingToken: (created as any)?.trackingToken || null });
+        return NextResponse.json({ ok: true, orderId: created.id, trackingToken: token });
     } catch (e: any) {
         console.error("/api/orders/guest failed:", e);
         return NextResponse.json({ ok: false, error: e?.message || "Hata" }, { status: 500 });
