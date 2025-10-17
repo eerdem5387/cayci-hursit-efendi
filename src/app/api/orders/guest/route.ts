@@ -5,18 +5,18 @@ import { sendMail } from "@/lib/mailer";
 import { renderOrderConfirmation } from "@/lib/emails";
 
 function createTrackingToken(): string {
-    return crypto.randomBytes(24).toString("hex");
+  return crypto.randomBytes(24).toString("hex");
 }
 
 export async function POST(req: NextRequest) {
-    try {
-        const data = await req.json().catch(() => null as any);
-        if (!data || !data.email || !data.address || !Array.isArray(data.items)) {
-            return NextResponse.json({ ok: false, error: "Eksik alan" }, { status: 400 });
-        }
+  try {
+    const data = await req.json().catch(() => null as any);
+    if (!data || !data.email || !data.address || !Array.isArray(data.items)) {
+      return NextResponse.json({ ok: false, error: "Eksik alan" }, { status: 400 });
+    }
 
-        const total = Number(data.total || 0);
-        const token = createTrackingToken();
+    const total = Number(data.total || 0);
+    const token = createTrackingToken();
 
     // Her zaman minimum alanlarla oluştur (prod DB şeması farklı olabilir)
     const created = await prisma.order.create({
@@ -30,7 +30,19 @@ export async function POST(req: NextRequest) {
         total,
         status: "pending",
       },
+      // Select only guaranteed column(s) to avoid selecting non-existent columns in RETURNING
+      select: { id: true },
     });
+
+    // Sipariş kalemlerini kaydet (best-effort)
+    try {
+      const items = Array.isArray(data.items) ? data.items : [];
+      const rows = items
+        .map((i: any) => ({ slug: String(i.slug || ""), qty: Number(i.qty || 0) }))
+        .filter((i: any) => i.slug && i.qty > 0)
+        .map((i: any) => ({ orderId: created.id, slug: i.slug, qty: i.qty }));
+      if (rows.length) await prisma.orderItem.createMany({ data: rows });
+    } catch (_) { }
     // Yeni kolonlar varsa güncellemeyi dene (yoksa sessizce geç)
     try {
       await prisma.order.update({
@@ -44,21 +56,23 @@ export async function POST(req: NextRequest) {
           clientIp: (req.headers.get("x-forwarded-for") || undefined) as any,
           userAgent: (req.headers.get("user-agent") || undefined) as any,
         },
+        // Avoid selecting non-existent columns on outdated DBs
+        select: { id: true },
       });
-    } catch (_) {}
+    } catch (_) { }
 
     // E-posta bildirimi (errors swallowed to not block checkout)
     try {
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
       const trackingUrl = token ? `${baseUrl}/siparis-takip/${token}` : undefined;
       await sendMail(data.email, "Siparişiniz Alındı", renderOrderConfirmation({ orderId: created.id, trackingUrl }));
-    } catch (_) {}
+    } catch (_) { }
 
-        return NextResponse.json({ ok: true, orderId: created.id, trackingToken: token });
-    } catch (e: any) {
-        console.error("/api/orders/guest failed:", e);
-        return NextResponse.json({ ok: false, error: e?.message || "Hata" }, { status: 500 });
-    }
+    return NextResponse.json({ ok: true, orderId: created.id, trackingToken: token });
+  } catch (e: any) {
+    console.error("/api/orders/guest failed:", e);
+    return NextResponse.json({ ok: false, error: e?.message || "Hata" }, { status: 500 });
+  }
 }
 
 
