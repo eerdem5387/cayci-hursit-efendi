@@ -12,6 +12,9 @@ export default function CheckoutPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [agreeGuest, setAgreeGuest] = useState(false);
+  const [agreeKvkk, setAgreeKvkk] = useState(false);
+  const [agreeMesafeli, setAgreeMesafeli] = useState(false);
+  const [agreeIade, setAgreeIade] = useState(false);
   const [formData, setFormData] = useState({
     ad: "",
     email: "",
@@ -88,6 +91,10 @@ export default function CheckoutPage() {
     const isLoggedIn = !!(session as any)?.user;
     if (!isLoggedIn && !agreeGuest) {
       alert("Lütfen üye olmadan devam ettiğinizi onaylayın.");
+      return;
+    }
+    if (!agreeKvkk || !agreeMesafeli || !agreeIade) {
+      alert("Lütfen KVKK, Mesafeli Satış Sözleşmesi ve İade/İptal koşullarını onaylayın.");
       return;
     }
 
@@ -239,6 +246,26 @@ export default function CheckoutPage() {
                   </label>
                 </div>
               )}
+              <div className="mt-4 space-y-2 rounded-lg bg-gray-50 p-3 text-gray-800">
+                <label className="flex items-start gap-2 text-sm">
+                  <input type="checkbox" className="mt-1" checked={agreeKvkk} onChange={(e)=>setAgreeKvkk(e.target.checked)} />
+                  <span>
+                    <a className="text-emerald-700 hover:underline" href="/kvkk-aydinlatma-metni" target="_blank">KVKK Aydınlatma Metni</a>'ni okudum ve kabul ediyorum.
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <input type="checkbox" className="mt-1" checked={agreeMesafeli} onChange={(e)=>setAgreeMesafeli(e.target.checked)} />
+                  <span>
+                    <a className="text-emerald-700 hover:underline" href="/mesafeli-satis-sozlesmesi" target="_blank">Mesafeli Satış Sözleşmesi</a>'ni okudum ve kabul ediyorum.
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <input type="checkbox" className="mt-1" checked={agreeIade} onChange={(e)=>setAgreeIade(e.target.checked)} />
+                  <span>
+                    <a className="text-emerald-700 hover:underline" href="/iade-iptal-kosullari" target="_blank">İade ve İptal Koşulları</a>'nı okudum ve kabul ediyorum.
+                  </span>
+                </label>
+              </div>
             </div>
 
             <div className="rounded-xl border border-gray-200 bg-white p-6">
