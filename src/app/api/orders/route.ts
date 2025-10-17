@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendMail } from "@/lib/mailer";
 import { getProducts, getSettings } from "@/lib/data";
-import { renderAdminOrderEmail, renderCustomerOrderEmail, renderCustomerOrderStatusEmail } from "@/lib/emails";
+import { renderAdminOrderEmail, renderCustomerOrderEmail, renderCustomerOrderStatusEmail, renderOrderConfirmation } from "@/lib/emails";
 import { auth } from "@/lib/auth";
 
 type CartItem = { slug: string; qty: number };
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
             try {
                 const trackingUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com"}/siparis-takip/${templOrder.id}`;
                 await sendMail(customerTo, "Siparişiniz Alındı", renderOrderConfirmation({ orderId: templOrder.id, trackingUrl, items: templOrder.items as any }));
-            } catch {}
+            } catch { }
         } catch (e) {
             // e-posta hatası siparişi engellemesin
         }
