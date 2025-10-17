@@ -13,8 +13,21 @@ export async function createTransport() {
 
 export async function sendMail(to: string, subject: string, html: string) {
     const transport = await createTransport();
-    const from = (await getSettings()).smtp.from || "no-reply@localhost";
-    await transport.sendMail({ from, to, subject, html });
+    const settings = await getSettings();
+    const from = settings.smtp.from || "no-reply@localhost";
+    const replyTo = settings.notifications?.adminEmail || undefined; // yönlendirmek isterseniz adminEmail kullanılır
+    await transport.sendMail({
+        from,
+        to,
+        subject,
+        html,
+        replyTo, // varsa cevaplar adminEmail'e yönlenir; yoksa Reply-To set edilmez
+        headers: {
+            "Auto-Submitted": "auto-generated",
+            "X-Auto-Response-Suppress": "All",
+            Precedence: "bulk",
+        },
+    });
 }
 
 
