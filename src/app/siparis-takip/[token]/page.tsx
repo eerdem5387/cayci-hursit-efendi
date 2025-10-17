@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/db";
 
-export default async function OrderTrackPage({ params }: { params: { token: string } }) {
-  const order = await prisma.order.findFirst({ where: { trackingToken: params.token } });
+export default async function OrderTrackPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+  const order = await prisma.order.findFirst({ where: { trackingToken: token } });
   if (!order) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 md:px-6">
