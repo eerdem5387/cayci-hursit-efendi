@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
                 trackingToken: token,
                 shippingJson: data.shipping || undefined,
                 billingJson: data.billing || undefined,
-                clientIp: req.headers.get("x-forwarded-for") || req.ip || undefined,
+        clientIp: req.headers.get("x-forwarded-for") || undefined,
                 userAgent: req.headers.get("user-agent") || undefined,
             },
         });
