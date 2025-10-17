@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
 import { sendMail } from "@/lib/mailer";
-import { renderOrderConfirmation } from "@/lib/emails";
+import { renderAdminOrderEmail, renderOrderConfirmation } from "@/lib/emails";
+import { getProducts, getSettings } from "@/lib/data";
 
 function createTrackingToken(): string {
   return crypto.randomBytes(24).toString("hex");
@@ -71,6 +72,23 @@ export async function POST(req: NextRequest) {
         "Siparişiniz Alındı",
         renderOrderConfirmation({ orderId: created.id, trackingUrl, items })
       );
+
+      // Admin'e özet e-posta
+      const settings = await getSettings();
+      const adminTo = settings.notifications?.adminEmail || settings.smtp.from || "";
+      if (adminTo) {
+        const products = await getProducts();
+        const priceMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.price]));
+        const nameMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.name]));
+        const templOrder = {
+          id: created.id,
+          createdAt: new Date().toISOString(),
+          customer: { ad: data.name || "", email: data.email, adres: data.address || "", sehir: data.city || "", telefon: data.phone || "" },
+          items: items.map((i: any) => ({ slug: i.slug, qty: i.qty, name: nameMap[i.slug], price: priceMap[i.slug] })),
+        } as any;
+        const adminHtml = renderAdminOrderEmail(templOrder, settings);
+        await sendMail(adminTo, "Yeni siparişiniz var", adminHtml);
+      }
     } catch (_) { }
 
     return NextResponse.json({ ok: true, orderId: created.id, trackingToken: token });
