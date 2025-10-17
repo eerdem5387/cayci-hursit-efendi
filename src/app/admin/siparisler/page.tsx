@@ -7,7 +7,8 @@ type Order = {
   createdAt: string;
   customer: { ad: string; email: string; adres: string; sehir: string; telefon: string };
   items: { slug: string; qty: number }[];
-  status: "pending" | "paid" | "failed";
+  // status alanı geçmişte paid/failed iken yeni akışta onaylandi/kargoda/teslim_edildi/basarisiz olabilir
+  status: string;
   isGuest?: boolean;
 };
 
@@ -32,7 +33,13 @@ export default function OrdersAdmin() {
   useEffect(() => { load(); }, [query, statusFilter, page]);
 
   const setStatus = async (id: string, status: Order["status"]) => {
-    await fetch("/api/orders", { method: "PUT", body: JSON.stringify({ id, status }) });
+    let body: any = { id, status };
+    if (status === "basarisiz") {
+      const reason = window.prompt("Başarısız nedeni (zorunlu):");
+      if (!reason || !reason.trim()) return;
+      body.reason = reason.trim();
+    }
+    await fetch("/api/orders", { method: "PUT", body: JSON.stringify(body) });
     load();
   };
 
@@ -47,8 +54,12 @@ export default function OrdersAdmin() {
           <select className="rounded border border-gray-300 px-3 py-2" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value as any); setPage(1); }}>
             <option value="">Tüm Durumlar</option>
             <option value="pending">Beklemede</option>
-            <option value="paid">Ödendi</option>
-            <option value="failed">Başarısız</option>
+            <option value="onaylandi">Onaylandı</option>
+            <option value="kargoda">Kargoda</option>
+            <option value="teslim_edildi">Teslim Edildi</option>
+            <option value="basarisiz">Başarısız</option>
+            <option value="paid">(Eski) Ödendi</option>
+            <option value="failed">(Eski) Başarısız</option>
           </select>
           <div className="self-center text-sm text-gray-600">Toplam: {orders.filter((o) => {
             const q = query.trim().toLowerCase();
@@ -65,8 +76,12 @@ export default function OrdersAdmin() {
               <div className="text-sm text-gray-600">#{o.id} – {new Date(o.createdAt).toLocaleString("tr-TR")} – <Link className="text-emerald-700" href={`/admin/siparisler/${o.id}`}>Detay</Link></div>
               <select className="rounded border border-gray-300 px-2 py-1 text-sm" value={o.status} onChange={(e) => setStatus(o.id, e.target.value as Order["status"]) }>
                 <option value="pending">Beklemede</option>
-                <option value="paid">Ödendi</option>
-                <option value="failed">Başarısız</option>
+                <option value="onaylandi">Onaylandı</option>
+                <option value="kargoda">Kargoda</option>
+                <option value="teslim_edildi">Teslim Edildi</option>
+                <option value="basarisiz">Başarısız</option>
+                <option value="paid">(Eski) Ödendi</option>
+                <option value="failed">(Eski) Başarısız</option>
               </select>
             </div>
             <div className="mt-2 text-sm">
