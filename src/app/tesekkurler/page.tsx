@@ -1,7 +1,9 @@
+"use client";
 import Link from "next/link";
+import { useMemo } from "react";
 
 export default function ThanksPage() {
-  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const params = useMemo(() => new URLSearchParams(typeof window !== "undefined" ? window.location.search : ""), []);
   const paid = params?.get("paid") === "1";
   const msg = params?.get("msg") || "";
   const title = paid ? "Ödeme Başarılı" : "Siparişiniz Alındı";

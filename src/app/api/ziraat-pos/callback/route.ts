@@ -15,6 +15,8 @@ export async function POST(req: NextRequest) {
     // mdStatus 1,2,3,4 bazı bankalarda başarılı sayılır; burada en sık kullanılan '1' e bakıyoruz
     const mdStatus = data["mdStatus"] || data["MdStatus"] || "";
     const response = data["Response"] || data["response"] || "";
+    const prc = data["ProcReturnCode"] || data["procReturnCode"] || "";
+    const prc = data["ProcReturnCode"] || data["procReturnCode"] || "";
 
     // HASH doğrulama (NestPay dönüşünde HASHSTR + storeKey -> SHA1 base64)
     const incomingHash = data["HASH"] || data["hash"] || "";
@@ -31,12 +33,12 @@ export async function POST(req: NextRequest) {
       if (oid) {
         await prisma.order.updateMany({ where: { id: oid }, data: { status: "paid" } });
       }
-      return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=1`, 303);
+      return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=1&mdStatus=${encodeURIComponent(mdStatus)}&resp=${encodeURIComponent(response)}&prc=${encodeURIComponent(prc)}`, 303);
     }
 
     // Başarısız ise beklenen redirect
     const msg = data["ErrMsg"] || data["errmsg"] || "Ödeme doğrulanamadı";
-    return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=0&msg=${encodeURIComponent(msg)}`, 303);
+    return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=0&msg=${encodeURIComponent(msg)}&mdStatus=${encodeURIComponent(mdStatus)}&resp=${encodeURIComponent(response)}&prc=${encodeURIComponent(prc)}`, 303);
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || "Callback error" }, { status: 500 });
   }
@@ -66,11 +68,11 @@ export async function GET(req: NextRequest) {
       if (oid) {
         await prisma.order.updateMany({ where: { id: oid }, data: { status: "paid" } });
       }
-      return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=1`, 303);
+      return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=1&mdStatus=${encodeURIComponent(mdStatus)}&resp=${encodeURIComponent(response)}&prc=${encodeURIComponent(prc)}`, 303);
     }
 
     const msg = data["ErrMsg"] || data["errmsg"] || "Ödeme doğrulanamadı";
-    return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=0&msg=${encodeURIComponent(msg)}`, 303);
+    return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=0&msg=${encodeURIComponent(msg)}&mdStatus=${encodeURIComponent(mdStatus)}&resp=${encodeURIComponent(response)}&prc=${encodeURIComponent(prc)}`, 303);
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || "Callback error" }, { status: 500 });
   }
