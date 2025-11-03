@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
     const mdStatus = data["mdStatus"] || data["MdStatus"] || "";
     const response = data["Response"] || data["response"] || "";
     const prc = data["ProcReturnCode"] || data["procReturnCode"] || "";
+    const prc = data["ProcReturnCode"] || data["procReturnCode"] || "";
 
     // HASH doğrulama (NestPay dönüşünde HASHSTR + storeKey -> SHA1 base64)
     const incomingHash = data["HASH"] || data["hash"] || "";
