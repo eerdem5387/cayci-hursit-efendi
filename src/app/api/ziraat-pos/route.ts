@@ -40,10 +40,10 @@ export async function POST(req: NextRequest) {
     const type = "Auth";
     const storeTypeResolved = storeType || "3d_pay_hosting";
 
-    // Klasik: storetype/currency hariç
-    // clientid + oid + amount + okUrl + failUrl + trantype + installment + rnd + storeKey
-    const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment}${rnd}${storeKey}`;
-    const hash = crypto.createHash("sha1").update(plain, "utf8").digest("base64");
+    // Klasik (sık profil): taksit boşsa dahil edilmez; SHA256
+    // clientid + oid + amount + okUrl + failUrl + trantype + [taksit?] + rnd + storeKey
+    const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment ? installment : ""}${rnd}${storeKey}`;
+    const hash = crypto.createHash("sha256").update(plain, "utf8").digest("base64");
 
     const action = posUrl.startsWith("http") ? posUrl : `https://${posUrl}`;
     const params: Record<string, string> = {
@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
         CallbackURL: callbackUrl,
         rnd,
         hash,
-        HASH: hash, // bazı kurulumlar büyük harf ister
+        HASH: hash,
+        hashAlgorithm: "SHA256",
         storetype: storeTypeResolved,
         trantype: type,
         lang,
