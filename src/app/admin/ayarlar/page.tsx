@@ -15,6 +15,8 @@ export default function SettingsPage() {
   const [testing, setTesting] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const [initLogs, setInitLogs] = useState<any[]>([]);
+  const [loadingInit, setLoadingInit] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/settings", { cache: "no-store" })
@@ -50,6 +52,20 @@ export default function SettingsPage() {
   const clearLogs = async () => {
     await fetch("/api/admin/ziraat-pos/logs", { method: "DELETE" });
     setLogs([]);
+  };
+
+  const loadInitLogs = async () => {
+    setLoadingInit(true);
+    try {
+      const res = await fetch("/api/admin/ziraat-pos/init-logs", { cache: "no-store" });
+      const data = await res.json();
+      setInitLogs(Array.isArray(data?.logs) ? data.logs : []);
+    } catch {}
+    setLoadingInit(false);
+  };
+  const clearInitLogs = async () => {
+    await fetch("/api/admin/ziraat-pos/init-logs", { method: "DELETE" });
+    setInitLogs([]);
   };
 
   if (!settings) return <div>Yükleniyor...</div>;
@@ -100,6 +116,44 @@ export default function SettingsPage() {
                     <td className="py-1 pr-2">{l.response || l.data?.Response || l.data?.response || ""}</td>
                     <td className="py-1 pr-2">{l.data?.ProcReturnCode || l.data?.procReturnCode || ""}</td>
                     <td className="py-1">{l.data?.ErrMsg || l.data?.errmsg || ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Ziraat POS Init (Gönderilen Form)</h2>
+          <div className="flex items-center gap-2">
+            <button onClick={loadInitLogs} className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50" disabled={loadingInit}>{loadingInit ? "Yükleniyor…" : "Yenile"}</button>
+            <button onClick={clearInitLogs} className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50">Temizle</button>
+          </div>
+        </div>
+        {initLogs.length === 0 ? (
+          <div className="text-sm text-gray-500">Kayıt yok.</div>
+        ) : (
+          <div className="max-h-80 overflow-auto text-sm">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="text-gray-600">
+                  <th className="py-1 pr-2">Zaman</th>
+                  <th className="py-1 pr-2">Oid</th>
+                  <th className="py-1 pr-2">Tutar</th>
+                  <th className="py-1 pr-2">Algoritma</th>
+                  <th className="py-1 pr-2">Plain</th>
+                </tr>
+              </thead>
+              <tbody>
+                {initLogs.map((l, i) => (
+                  <tr key={i} className="border-t align-top">
+                    <td className="py-1 pr-2">{new Date(l.ts).toLocaleString("tr-TR")}</td>
+                    <td className="py-1 pr-2">{l.oid}</td>
+                    <td className="py-1 pr-2">{l.amount}</td>
+                    <td className="py-1 pr-2">{l.hashAlgo}</td>
+                    <td className="py-1 pr-2 break-all whitespace-pre-wrap">{l.plain}</td>
                   </tr>
                 ))}
               </tbody>

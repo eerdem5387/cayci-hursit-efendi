@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSettings } from "@/lib/data";
+import { prisma } from "@/lib/db";
 import crypto from "crypto";
 
 // NOT: Gerçek Ziraat POS entegrasyonu için banka tarafından sağlanan
@@ -61,6 +62,16 @@ export async function POST(req: NextRequest) {
         lang,
         currency,
     };
+
+    // Debug: init log (last 50)
+    try {
+        const key = "ziraatPosInitLogs";
+        const row = await prisma.settingKV.findUnique({ where: { key } });
+        const arr = Array.isArray((row as any)?.value) ? ((row as any).value as any[]) : [];
+        arr.unshift({ ts: Date.now(), oid, amount, siteUrl, action, hashAlgo: "SHA1", plain, params });
+        const trimmed = arr.slice(0, 50);
+        await prisma.settingKV.upsert({ where: { key }, update: { value: trimmed as any }, create: { key, value: trimmed as any } });
+    } catch { }
 
     return NextResponse.json({ ok: true, action, params });
 }
