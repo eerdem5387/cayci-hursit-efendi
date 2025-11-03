@@ -39,11 +39,10 @@ export async function POST(req: NextRequest) {
     const type = "Auth";
     const storeTypeResolved = storeType || "3d_pay_hosting";
 
-    // Bazı Ziraat kurulumlarında SHA256 ve/veya currency dahil edilmesi istenir.
-    // Önce standart sırayı SHA256 ile deneyelim ve hashAlgorithm parametresini belirtelim.
-    // Bazı kurulumlarda currency de HASH dizisine dahil edilir
-    const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment}${rnd}${currency}${storeKey}`;
-    const hash = crypto.createHash("sha256").update(plain, "utf8").digest("base64");
+    // Klasik hash dizilimi (çoğu Ziraat/NestPay kurulumunda):
+    // clientid + oid + amount + okUrl + failUrl + trantype + installment + rnd + storeKey
+    const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment}${rnd}${storeKey}`;
+    const hash = crypto.createHash("sha1").update(plain, "utf8").digest("base64");
 
     const action = posUrl.startsWith("http") ? posUrl : `https://${posUrl}`;
     const params: Record<string, string> = {
@@ -55,7 +54,6 @@ export async function POST(req: NextRequest) {
         callbackurl: callbackUrl,
         rnd,
         hash,
-        hashAlgorithm: "SHA256",
         storetype: storeTypeResolved,
         trantype: type,
         lang,
