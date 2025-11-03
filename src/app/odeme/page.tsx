@@ -141,8 +141,30 @@ export default function CheckoutPage() {
         throw new Error(err?.error || "Sipariş oluşturulamadı");
       }
       const data = await res.json();
-      const guestFlag = isLoggedIn ? "0" : "1";
-      window.location.href = "/tesekkurler?guest=" + guestFlag + "&oid=" + encodeURIComponent(data.orderId);
+      // Ziraat POS 3D yönlendirmesi
+      const posRes = await fetch("/api/ziraat-pos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: data.orderId, amount: total }),
+      });
+      if (!posRes.ok) {
+        const err = await posRes.json().catch(() => ({} as any));
+        throw new Error(err?.error || "Ödeme başlatılamadı");
+      }
+      const pos = await posRes.json();
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = pos.action;
+      form.style.display = "none";
+      Object.entries(pos.params || {}).forEach(([k, v]) => {
+        const inp = document.createElement("input");
+        inp.type = "hidden";
+        inp.name = k;
+        inp.value = String(v);
+        form.appendChild(inp);
+      });
+      document.body.appendChild(form);
+      form.submit();
     } catch (err: any) {
       alert(err?.message || "Bir hata oluştu");
     } finally {

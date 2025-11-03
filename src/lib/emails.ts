@@ -25,7 +25,7 @@ export function renderOrderConfirmation(params: { orderId: string; trackingUrl?:
         <table class="table">
           <thead><tr><th>Ürün</th><th>Adet</th><th>Fiyat</th></tr></thead>
           <tbody>
-            ${params.items.map(i => `<tr><td>${i.name || i.slug}</td><td>${i.qty}</td><td>${typeof i.price === 'number' ? i.price.toLocaleString('tr-TR',{style:'currency',currency:'TRY'}) : '-'}</td></tr>`).join("")}
+            ${params.items.map(i => `<tr><td>${i.name || i.slug}</td><td>${i.qty}</td><td>${typeof i.price === 'number' ? i.price.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' }) : '-'}</td></tr>`).join("")}
           </tbody>
         </table>
         ` : ''}
@@ -42,14 +42,14 @@ export function renderOrderConfirmation(params: { orderId: string; trackingUrl?:
 import { HomeContent, Settings } from "@/lib/data";
 
 type OrderLite = {
-    id: string;
-    createdAt: string;
-    customer: { ad: string; email: string; adres: string; sehir: string; telefon: string };
-    items: { slug: string; qty: number; name?: string; price?: number }[];
+  id: string;
+  createdAt: string;
+  customer: { ad: string; email: string; adres: string; sehir: string; telefon: string };
+  items: { slug: string; qty: number; name?: string; price?: number }[];
 };
 
 function style() {
-    return `
+  return `
   body{background:#f6f7f9;margin:0;padding:24px;font-family:Segoe UI,Arial,sans-serif;color:#0f172a}
   .card{max-width:640px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb}
   .hdr{background:#065f46;color:#fff;padding:20px}
@@ -64,14 +64,14 @@ function style() {
 }
 
 export function renderAdminOrderEmail(order: OrderLite, settings: Settings) {
-    const title = settings.site?.title || "Yeni Sipariş";
-    const rows = order.items.map((i) => `<tr>
+  const title = settings.site?.title || "Yeni Sipariş";
+  const rows = order.items.map((i) => `<tr>
       <td>${i.name || i.slug}</td>
       <td>${i.qty}</td>
       <td>${typeof i.price === "number" ? i.price.toLocaleString("tr-TR", { style: "currency", currency: "TRY" }) : "-"}</td>
     </tr>`).join("");
-    const adminUrl = `${SITE_URL}/admin/siparisler`;
-    return `<!doctype html><html><head><meta charSet="utf-8"/><style>${style()}</style></head><body>
+  const adminUrl = `${SITE_URL}/admin/siparisler`;
+  return `<!doctype html><html><head><meta charSet="utf-8"/><style>${style()}</style></head><body>
     <div class="card">
       <div class="hdr"><h1>${title} – Yeni Sipariş</h1></div>
       <div class="content">
@@ -95,14 +95,14 @@ export function renderAdminOrderEmail(order: OrderLite, settings: Settings) {
 }
 
 export function renderCustomerOrderEmail(order: OrderLite, settings: Settings) {
-    const title = settings.site?.title || "Çaycı Hurşit Efendi";
-    const rows = order.items.map((i) => `<tr>
+  const title = settings.site?.title || "Çaycı Hurşit Efendi";
+  const rows = order.items.map((i) => `<tr>
       <td>${i.name || i.slug}</td>
       <td>${i.qty}</td>
       <td>${typeof i.price === "number" ? i.price.toLocaleString("tr-TR", { style: "currency", currency: "TRY" }) : "-"}</td>
     </tr>`).join("");
-    const trackingUrl = `${SITE_URL}/siparis-takip/${order.id}`;
-    return `<!doctype html><html><head><meta charSet="utf-8"/><style>${style()}</style></head><body>
+  const trackingUrl = `${SITE_URL}/siparis-takip/${order.id}`;
+  return `<!doctype html><html><head><meta charSet="utf-8"/><style>${style()}</style></head><body>
     <div class="card">
       <div class="hdr"><h1>${title} – Siparişiniz Oluşturuldu</h1></div>
       <div class="content">
@@ -139,10 +139,10 @@ export function renderCustomerOrderStatusEmail(
     params.status === "onaylandi"
       ? "Siparişiniz onaylandı"
       : params.status === "kargoda"
-      ? "Siparişiniz kargoya verildi"
-      : params.status === "teslim_edildi"
-      ? "Siparişiniz teslim edildi"
-      : "Siparişiniz işleme alınamadı";
+        ? "Siparişiniz kargoya verildi"
+        : params.status === "teslim_edildi"
+          ? "Siparişiniz teslim edildi"
+          : "Siparişiniz işleme alınamadı";
   const reasonBlock =
     params.status === "basarisiz" && params.reason
       ? `<div style="margin-top:12px;padding:12px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:8px">

@@ -50,7 +50,6 @@ export default function Footer() {
             >
               <img src="/images/whatsapp.svg" alt="WhatsApp" className="h-4 w-4" /> WhatsApp Destek
             </a>
-            <div className="mt-1 text-xs text-emerald-100">{process.env.NEXT_PUBLIC_WHATSAPP || "+90 555 555 55 55"}</div>
           </div>
         </div>
       </div>

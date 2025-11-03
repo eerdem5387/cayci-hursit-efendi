@@ -6,14 +6,14 @@ type Settings = {
     site: { title: string; description: string };
     smtp: { host: string; port: number; user: string; pass: string; from: string };
     notifications?: { adminEmail?: string };
-    payments: { ziraatPos: { merchantId?: string; terminalId?: string; posUrl?: string } };
+    payments: { ziraatPos: { merchantId?: string; terminalId?: string; posUrl?: string; apiUrl?: string; storeKey?: string; username?: string; password?: string; storeType?: string } };
 };
 
 const DEFAULTS: Settings = {
     site: { title: "Çaycı Hurşit Efendi", description: "Gerçek çay tadı" },
     smtp: { host: "", port: 587, user: "", pass: "", from: "" },
     notifications: { adminEmail: "" },
-    payments: { ziraatPos: { merchantId: "", terminalId: "", posUrl: "" } },
+    payments: { ziraatPos: { merchantId: "", terminalId: "", posUrl: "https://sanalpos2.ziraatbank.com.tr/fim/est3Dgate", apiUrl: "https://sanalpos2.ziraatbank.com.tr/fim/api", storeKey: "", username: "", password: "", storeType: "3d_pay_hosting" } },
 };
 
 export async function GET() {

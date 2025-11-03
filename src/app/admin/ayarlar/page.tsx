@@ -5,7 +5,7 @@ type Settings = {
   site: { title: string; description: string };
   smtp: { host: string; port: number; user: string; pass: string; from: string };
   notifications?: { adminEmail?: string };
-  payments: { ziraatPos: { merchantId?: string; terminalId?: string; posUrl?: string } };
+  payments: { ziraatPos: { merchantId?: string; terminalId?: string; posUrl?: string; apiUrl?: string; storeKey?: string; username?: string; password?: string; storeType?: string } };
 };
 
 export default function SettingsPage() {
@@ -90,11 +90,16 @@ export default function SettingsPage() {
       </section>
 
       <section className="rounded-lg border border-gray-200 bg-white p-4">
-        <h2 className="mb-3 text-lg font-semibold">Ödeme Entegrasyonları (Placeholder)</h2>
-        <div className="grid gap-3">
-          <input className="rounded border border-gray-300 px-3 py-2" value={settings.payments.ziraatPos.merchantId || ""} onChange={(e) => setSettings({ ...settings, payments: { ziraatPos: { ...settings.payments.ziraatPos, merchantId: e.target.value } } })} placeholder="Ziraat Merchant ID" />
-          <input className="rounded border border-gray-300 px-3 py-2" value={settings.payments.ziraatPos.terminalId || ""} onChange={(e) => setSettings({ ...settings, payments: { ziraatPos: { ...settings.payments.ziraatPos, terminalId: e.target.value } } })} placeholder="Ziraat Terminal ID" />
-          <input className="rounded border border-gray-300 px-3 py-2" value={settings.payments.ziraatPos.posUrl || ""} onChange={(e) => setSettings({ ...settings, payments: { ziraatPos: { ...settings.payments.ziraatPos, posUrl: e.target.value } } })} placeholder="Ziraat POS URL" />
+        <h2 className="mb-3 text-lg font-semibold">Ziraat POS (3D Pay Hosting)</h2>
+        <div className="grid gap-3 md:grid-cols-2">
+          <input className="rounded border border-gray-300 px-3 py-2" value={settings.payments.ziraatPos.merchantId || ""} onChange={(e) => setSettings({ ...settings, payments: { ziraatPos: { ...settings.payments.ziraatPos, merchantId: e.target.value } } })} placeholder="Merchant ID (ClientId)" />
+          <input className="rounded border border-gray-300 px-3 py-2" value={settings.payments.ziraatPos.terminalId || ""} onChange={(e) => setSettings({ ...settings, payments: { ziraatPos: { ...settings.payments.ziraatPos, terminalId: e.target.value } } })} placeholder="Terminal ID" />
+          <input className="rounded border border-gray-300 px-3 py-2" value={settings.payments.ziraatPos.posUrl || ""} onChange={(e) => setSettings({ ...settings, payments: { ziraatPos: { ...settings.payments.ziraatPos, posUrl: e.target.value } } })} placeholder="3D URL (est3Dgate)" />
+          <input className="rounded border border-gray-300 px-3 py-2" value={settings.payments.ziraatPos.apiUrl || ""} onChange={(e) => setSettings({ ...settings, payments: { ziraatPos: { ...settings.payments.ziraatPos, apiUrl: e.target.value } } })} placeholder="API URL (/fim/api)" />
+          <input className="rounded border border-gray-300 px-3 py-2" value={settings.payments.ziraatPos.username || ""} onChange={(e) => setSettings({ ...settings, payments: { ziraatPos: { ...settings.payments.ziraatPos, username: e.target.value } } })} placeholder="Prov Kullanıcı Adı" />
+          <input className="rounded border border-gray-300 px-3 py-2" type="password" value={settings.payments.ziraatPos.password || ""} onChange={(e) => setSettings({ ...settings, payments: { ziraatPos: { ...settings.payments.ziraatPos, password: e.target.value } } })} placeholder="Prov Şifre" />
+          <input className="rounded border border-gray-300 px-3 py-2 md:col-span-2" value={settings.payments.ziraatPos.storeKey || ""} onChange={(e) => setSettings({ ...settings, payments: { ziraatPos: { ...settings.payments.ziraatPos, storeKey: e.target.value } } })} placeholder="Store Key (Mağaza Anahtarı)" />
+          <input className="rounded border border-gray-300 px-3 py-2" value={settings.payments.ziraatPos.storeType || ""} onChange={(e) => setSettings({ ...settings, payments: { ziraatPos: { ...settings.payments.ziraatPos, storeType: e.target.value } } })} placeholder="Store Type (örn: 3d_pay_hosting)" />
         </div>
       </section>
 

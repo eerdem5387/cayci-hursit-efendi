@@ -19,7 +19,18 @@ export type Settings = {
     site: { title: string; description: string };
     smtp: { host: string; port: number; user: string; pass: string; from: string };
     notifications?: { adminEmail?: string };
-    payments: { ziraatPos: { merchantId?: string; terminalId?: string; posUrl?: string } };
+    payments: {
+        ziraatPos: {
+            merchantId?: string;
+            terminalId?: string;
+            posUrl?: string; // 3D URL
+            apiUrl?: string; // API URL
+            storeKey?: string;
+            username?: string; // Prov user
+            password?: string; // Prov password
+            storeType?: string; // e.g. 3d_pay_hosting
+        }
+    };
 };
 export type HomeContent = {
     popularIds: string[];
@@ -75,7 +86,23 @@ export async function getHome(): Promise<HomeContent> {
 export async function getSettings(): Promise<Settings> {
     noStore();
     const row = await prisma.settingKV.findUnique({ where: { key: "settings" } });
-    return (row?.value as any) || { site: { title: "Çaycı Hurşit Efendi", description: "Gerçek çay tadı" }, smtp: { host: "", port: 587, user: "", pass: "", from: "" }, notifications: { adminEmail: "" }, payments: { ziraatPos: {} } };
+    return (row?.value as any) || {
+        site: { title: "Çaycı Hurşit Efendi", description: "Gerçek çay tadı" },
+        smtp: { host: "", port: 587, user: "", pass: "", from: "" },
+        notifications: { adminEmail: "" },
+        payments: {
+            ziraatPos: {
+                merchantId: "",
+                terminalId: "",
+                posUrl: "https://sanalpos2.ziraatbank.com.tr/fim/est3Dgate",
+                apiUrl: "https://sanalpos2.ziraatbank.com.tr/fim/api",
+                storeKey: "",
+                username: "",
+                password: "",
+                storeType: "3d_pay_hosting",
+            }
+        }
+    } as any;
 }
 
 
