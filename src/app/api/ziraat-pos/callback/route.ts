@@ -31,12 +31,46 @@ export async function POST(req: NextRequest) {
       if (oid) {
         await prisma.order.updateMany({ where: { id: oid }, data: { status: "paid" } });
       }
-      return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=1`);
+      return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=1`, 303);
     }
 
     // Başarısız ise beklenen redirect
     const msg = data["ErrMsg"] || data["errmsg"] || "Ödeme doğrulanamadı";
-    return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=0&msg=${encodeURIComponent(msg)}`);
+    return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=0&msg=${encodeURIComponent(msg)}`, 303);
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, error: e?.message || "Callback error" }, { status: 500 });
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const url = new URL(req.url);
+    const data: Record<string, string> = {};
+    url.searchParams.forEach((v, k) => (data[k] = v));
+
+    const settings = await getSettings();
+    const storeKey = settings.payments.ziraatPos.storeKey || "";
+
+    const mdStatus = data["mdStatus"] || data["MdStatus"] || "";
+    const response = data["Response"] || data["response"] || "";
+    const incomingHash = data["HASH"] || data["hash"] || "";
+    const hashStr = data["HASHSTR"] || data["hashstr"] || "";
+    let verified = false;
+    if (hashStr && storeKey) {
+      const calc = crypto.createHash("sha1").update(hashStr + storeKey).digest("base64");
+      verified = calc === incomingHash;
+    }
+    const oid = data["oid"] || data["OID"] || data["OrderId"] || "";
+
+    if (verified && (mdStatus === "1") && (response.toLowerCase() === "approved")) {
+      if (oid) {
+        await prisma.order.updateMany({ where: { id: oid }, data: { status: "paid" } });
+      }
+      return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=1`, 303);
+    }
+
+    const msg = data["ErrMsg"] || data["errmsg"] || "Ödeme doğrulanamadı";
+    return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=0&msg=${encodeURIComponent(msg)}`, 303);
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || "Callback error" }, { status: 500 });
   }
