@@ -39,10 +39,10 @@ export async function POST(req: NextRequest) {
     const type = "Auth";
     const storeTypeResolved = storeType || "3d_pay_hosting";
 
-    // Klasik NestPay (EST) SHA1 + Base64 hash (3D Pay Hosting)
-    // Sıklıkla sıra: clientId + oid + amount + okUrl + failUrl + type + installment + rnd + storeKey
+    // Bazı Ziraat kurulumlarında SHA256 ve/veya currency dahil edilmesi istenir.
+    // Önce standart sırayı SHA256 ile deneyelim ve hashAlgorithm parametresini belirtelim.
     const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment}${rnd}${storeKey}`;
-    const hash = crypto.createHash("sha1").update(plain).digest("base64");
+    const hash = crypto.createHash("sha256").update(plain, "utf8").digest("base64");
 
     const action = posUrl.startsWith("http") ? posUrl : `https://${posUrl}`;
     const params: Record<string, string> = {
@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
         callbackurl: callbackUrl,
         rnd,
         hash,
+        hashAlgorithm: "SHA256",
         storetype: storeTypeResolved,
         trantype: type,
         lang,
