@@ -13,6 +13,8 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [testing, setTesting] = useState(false);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/settings", { cache: "no-store" })
@@ -35,6 +37,21 @@ export default function SettingsPage() {
     setTimeout(() => setMessage("") ,2000);
   };
 
+  const loadLogs = async () => {
+    setLoadingLogs(true);
+    try {
+      const res = await fetch("/api/admin/ziraat-pos/logs", { cache: "no-store" });
+      const data = await res.json();
+      setLogs(Array.isArray(data?.logs) ? data.logs : []);
+    } catch {}
+    setLoadingLogs(false);
+  };
+
+  const clearLogs = async () => {
+    await fetch("/api/admin/ziraat-pos/logs", { method: "DELETE" });
+    setLogs([]);
+  };
+
   if (!settings) return <div>Yükleniyor...</div>;
 
   return (
@@ -47,6 +64,48 @@ export default function SettingsPage() {
           <input className="rounded border border-gray-300 px-3 py-2" value={settings.site.title} onChange={(e) => setSettings({ ...settings, site: { ...settings.site, title: e.target.value } })} placeholder="Site Başlığı" />
           <input className="rounded border border-gray-300 px-3 py-2" value={settings.site.description} onChange={(e) => setSettings({ ...settings, site: { ...settings.site, description: e.target.value } })} placeholder="Açıklama" />
         </div>
+      </section>
+
+      <section className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Ziraat POS Debug</h2>
+          <div className="flex items-center gap-2">
+            <button onClick={loadLogs} className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50" disabled={loadingLogs}>{loadingLogs ? "Yükleniyor…" : "Yenile"}</button>
+            <button onClick={clearLogs} className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50">Temizle</button>
+          </div>
+        </div>
+        {logs.length === 0 ? (
+          <div className="text-sm text-gray-500">Kayıt yok. Callback gelince burada görünecek.</div>
+        ) : (
+          <div className="max-h-80 overflow-auto text-sm">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="text-gray-600">
+                  <th className="py-1 pr-2">Zaman</th>
+                  <th className="py-1 pr-2">Yöntem</th>
+                  <th className="py-1 pr-2">Oid</th>
+                  <th className="py-1 pr-2">mdStatus</th>
+                  <th className="py-1 pr-2">Response</th>
+                  <th className="py-1 pr-2">ProcCode</th>
+                  <th className="py-1">Mesaj</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((l, i) => (
+                  <tr key={i} className="border-t">
+                    <td className="py-1 pr-2">{new Date(l.ts).toLocaleString("tr-TR")}</td>
+                    <td className="py-1 pr-2">{l.method}</td>
+                    <td className="py-1 pr-2">{l.oid}</td>
+                    <td className="py-1 pr-2">{l.mdStatus || l.data?.mdStatus || l.data?.MdStatus || ""}</td>
+                    <td className="py-1 pr-2">{l.response || l.data?.Response || l.data?.response || ""}</td>
+                    <td className="py-1 pr-2">{l.data?.ProcReturnCode || l.data?.procReturnCode || ""}</td>
+                    <td className="py-1">{l.data?.ErrMsg || l.data?.errmsg || ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section className="rounded-lg border border-gray-200 bg-white p-4">

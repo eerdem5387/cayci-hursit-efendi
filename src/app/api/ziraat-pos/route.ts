@@ -39,10 +39,10 @@ export async function POST(req: NextRequest) {
     const type = "Auth";
     const storeTypeResolved = storeType || "3d_pay_hosting";
 
-    // Alternatif (daha sıkı sürüm): currency ve storetype dahil + SHA256
+    // Varyant: currency + storetype dahil ve SHA1
     // clientid + oid + amount + okUrl + failUrl + trantype + installment + rnd + currency + storetype + storeKey
     const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment}${rnd}${currency}${storeTypeResolved}${storeKey}`;
-    const hash = crypto.createHash("sha256").update(plain, "utf8").digest("base64");
+    const hash = crypto.createHash("sha1").update(plain, "utf8").digest("base64");
 
     const action = posUrl.startsWith("http") ? posUrl : `https://${posUrl}`;
     const params: Record<string, string> = {
@@ -52,10 +52,10 @@ export async function POST(req: NextRequest) {
         okUrl,
         failUrl,
         callbackurl: callbackUrl,
+        CallbackURL: callbackUrl,
         rnd,
         hash,
         HASH: hash, // bazı kurulumlar büyük harf ister
-        hashAlgorithm: "SHA256",
         storetype: storeTypeResolved,
         trantype: type,
         lang,

@@ -28,6 +28,16 @@ export async function POST(req: NextRequest) {
 
     const oid = data["oid"] || data["OID"] || data["OrderId"] || "";
 
+    // Debug log: persist last 50 callback payloads
+    try {
+      const key = "ziraatPosDebugLogs";
+      const row = await prisma.settingKV.findUnique({ where: { key } });
+      const arr = Array.isArray((row as any)?.value) ? ((row as any).value as any[]) : [];
+      arr.unshift({ ts: Date.now(), method: "POST", oid, mdStatus, response, data });
+      const trimmed = arr.slice(0, 50);
+      await prisma.settingKV.upsert({ where: { key }, update: { value: trimmed as any }, create: { key, value: trimmed as any } });
+    } catch { }
+
     if (verified && (mdStatus === "1") && (response.toLowerCase() === "approved")) {
       if (oid) {
         await prisma.order.updateMany({ where: { id: oid }, data: { status: "paid" } });
@@ -63,6 +73,16 @@ export async function GET(req: NextRequest) {
       verified = calc === incomingHash;
     }
     const oid = data["oid"] || data["OID"] || data["OrderId"] || "";
+
+    // Debug log: persist last 50 callback payloads
+    try {
+      const key = "ziraatPosDebugLogs";
+      const row = await prisma.settingKV.findUnique({ where: { key } });
+      const arr = Array.isArray((row as any)?.value) ? ((row as any).value as any[]) : [];
+      arr.unshift({ ts: Date.now(), method: "GET", oid, mdStatus, response, data });
+      const trimmed = arr.slice(0, 50);
+      await prisma.settingKV.upsert({ where: { key }, update: { value: trimmed as any }, create: { key, value: trimmed as any } });
+    } catch { }
 
     if (verified && (mdStatus === "1") && (response.toLowerCase() === "approved")) {
       if (oid) {
