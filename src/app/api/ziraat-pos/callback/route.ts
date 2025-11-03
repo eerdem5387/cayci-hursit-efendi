@@ -12,19 +12,23 @@ export async function POST(req: NextRequest) {
     const settings = await getSettings();
     const storeKey = settings.payments.ziraatPos.storeKey || "";
 
-    // mdStatus 1,2,3,4 bazı bankalarda başarılı sayılır; burada en sık kullanılan '1' e bakıyoruz
+    // Ver3 dönüş doğrulama (SHA512, alfabetik, kaçış)
     const mdStatus = data["mdStatus"] || data["MdStatus"] || "";
     const response = data["Response"] || data["response"] || "";
     const prc = data["ProcReturnCode"] || data["procReturnCode"] || "";
-
-    // HASH doğrulama (NestPay dönüşünde HASHSTR + storeKey -> SHA1 base64)
-    const incomingHash = data["HASH"] || data["hash"] || "";
-    const hashStr = data["HASHSTR"] || data["hashstr"] || "";
+    const incomingHash = (data["HASH"] || data["hash"] || "").toString();
+    const keysPost = Object.keys(data).filter((k) => {
+      const lk = k.toLowerCase();
+      return lk !== "hash" && lk !== "encoding" && lk !== "countdown";
+    }).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase(), undefined, { numeric: true, sensitivity: "base" }));
+    const escapedJoinPost = keysPost.map((k) => String(data[k] ?? "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|"))
+      .join("|") + "|" + storeKey.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
     let verified = false;
-    if (hashStr && storeKey) {
-      const calc = crypto.createHash("sha1").update(hashStr + storeKey).digest("base64");
-      verified = calc === incomingHash;
-    }
+    try {
+      const sha512hex = crypto.createHash("sha512").update(escapedJoinPost, "utf8").digest("hex");
+      const calc = Buffer.from(sha512hex, "hex").toString("base64");
+      verified = !!incomingHash && (incomingHash === calc);
+    } catch { }
 
     const oid = data["oid"] || data["OID"] || data["OrderId"] || "";
 
@@ -65,13 +69,19 @@ export async function GET(req: NextRequest) {
     const mdStatus = data["mdStatus"] || data["MdStatus"] || "";
     const response = data["Response"] || data["response"] || "";
     const prc = data["ProcReturnCode"] || data["procReturnCode"] || "";
-    const incomingHash = data["HASH"] || data["hash"] || "";
-    const hashStr = data["HASHSTR"] || data["hashstr"] || "";
+    const incomingHash = (data["HASH"] || data["hash"] || "").toString();
+    const keysGet = Object.keys(data).filter((k) => {
+      const lk = k.toLowerCase();
+      return lk !== "hash" && lk !== "encoding" && lk !== "countdown";
+    }).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase(), undefined, { numeric: true, sensitivity: "base" }));
+    const escapedJoinGet = keysGet.map((k) => String(data[k] ?? "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|"))
+      .join("|") + "|" + storeKey.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
     let verified = false;
-    if (hashStr && storeKey) {
-      const calc = crypto.createHash("sha1").update(hashStr + storeKey).digest("base64");
-      verified = calc === incomingHash;
-    }
+    try {
+      const sha512hex = crypto.createHash("sha512").update(escapedJoinGet, "utf8").digest("hex");
+      const calc = Buffer.from(sha512hex, "hex").toString("base64");
+      verified = !!incomingHash && (incomingHash === calc);
+    } catch { }
     const oid = data["oid"] || data["OID"] || data["OrderId"] || "";
 
     // Debug log: persist last 50 callback payloads
