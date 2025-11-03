@@ -40,9 +40,9 @@ export async function POST(req: NextRequest) {
     const type = "Auth";
     const storeTypeResolved = storeType || "3d_pay_hosting";
 
-    // Varyant: currency + storetype dahil ve SHA1
-    // clientid + oid + amount + okUrl + failUrl + trantype + installment + rnd + currency + storetype + storeKey
-    const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment}${rnd}${currency}${storeTypeResolved}${storeKey}`;
+    // Varyant: storetype dahil, currency hariç (bazı profillerde böyle)
+    // clientid + oid + amount + okUrl + failUrl + trantype + installment + rnd + storetype + storeKey
+    const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment}${rnd}${storeTypeResolved}${storeKey}`;
     const hash = crypto.createHash("sha1").update(plain, "utf8").digest("base64");
 
     const action = posUrl.startsWith("http") ? posUrl : `https://${posUrl}`;
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         const key = "ziraatPosInitLogs";
         const row = await prisma.settingKV.findUnique({ where: { key } });
         const arr = Array.isArray((row as any)?.value) ? ((row as any).value as any[]) : [];
-        arr.unshift({ ts: Date.now(), oid, amount, siteUrl, action, hashAlgo: "SHA1", plain, params });
+        arr.unshift({ ts: Date.now(), oid, amount, siteUrl, action, hashAlgo: "SHA1 (no currency, +storetype)", plain, params });
         const trimmed = arr.slice(0, 50);
         await prisma.settingKV.upsert({ where: { key }, update: { value: trimmed as any }, create: { key, value: trimmed as any } });
     } catch { }
