@@ -40,36 +40,47 @@ export async function POST(req: NextRequest) {
     const type = "Auth";
     const storeTypeResolved = storeType || "3d_pay_hosting";
 
-    // Klasik (sık profil): taksit boşsa dahil edilmez; SHA256
-    // clientid + oid + amount + okUrl + failUrl + trantype + [taksit?] + rnd + storeKey
-    const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment ? installment : ""}${rnd}${storeKey}`;
-    const hash = crypto.createHash("sha256").update(plain, "utf8").digest("base64");
+    // Ziraat 3D Pay Hosting (Ver3) hash yöntemi:
+    // 1) Tüm gönderilecek alanları topla (hash/HASH ve encoding hariç)
+    // 2) Anahtarların NATURAL case-insensitive sıralaması
+    // 3) Değerleri '|' ile birleştir (önce value içindeki '|' ve '\\' kaçırılır)
+    // 4) Sona kaçırılmış storeKey eklenir
+    // 5) SHA512 -> hex -> base64
 
     const action = posUrl.startsWith("http") ? posUrl : `https://${posUrl}`;
-    const params: Record<string, string> = {
+    const baseParams: Record<string, string> = {
         clientid: merchantId,
         oid,
         amount,
         okUrl,
         failUrl,
         callbackurl: callbackUrl,
-        CallbackURL: callbackUrl,
         rnd,
-        hash,
-        HASH: hash,
-        hashAlgorithm: "SHA256",
         storetype: storeTypeResolved,
         trantype: type,
         lang,
         currency,
     };
 
+    // Compute HASH per doc
+    const keys = Object.keys(baseParams).filter(k => {
+        const lk = k.toLowerCase();
+        return lk !== "hash" && lk !== "encoding";
+    }).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "accent", numeric: true }));
+    const escapedJoin = keys.map(k => {
+        const v = String(baseParams[k] ?? "");
+        return v.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
+    }).join("|") + "|" + storeKey.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
+    const sha512hex = crypto.createHash("sha512").update(escapedJoin, "utf8").digest("hex");
+    const hash = Buffer.from(sha512hex, "hex").toString("base64");
+    const params: Record<string, string> = { ...baseParams, HASH: hash };
+
     // Debug: init log (last 50)
     try {
         const key = "ziraatPosInitLogs";
         const row = await prisma.settingKV.findUnique({ where: { key } });
         const arr = Array.isArray((row as any)?.value) ? ((row as any).value as any[]) : [];
-        arr.unshift({ ts: Date.now(), oid, amount, siteUrl, action, hashAlgo: "SHA1 classic (no currency,no storetype)", plain, params });
+        arr.unshift({ ts: Date.now(), oid, amount, siteUrl, action, algo: "ver3|sha512|sorted|escaped", plain: escapedJoin, params });
         const trimmed = arr.slice(0, 50);
         await prisma.settingKV.upsert({ where: { key }, update: { value: trimmed as any }, create: { key, value: trimmed as any } });
     } catch { }
