@@ -41,7 +41,8 @@ export async function POST(req: NextRequest) {
 
     // Bazı Ziraat kurulumlarında SHA256 ve/veya currency dahil edilmesi istenir.
     // Önce standart sırayı SHA256 ile deneyelim ve hashAlgorithm parametresini belirtelim.
-    const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment}${rnd}${storeKey}`;
+    // Bazı kurulumlarda currency de HASH dizisine dahil edilir
+    const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment}${rnd}${currency}${storeKey}`;
     const hash = crypto.createHash("sha256").update(plain, "utf8").digest("base64");
 
     const action = posUrl.startsWith("http") ? posUrl : `https://${posUrl}`;
