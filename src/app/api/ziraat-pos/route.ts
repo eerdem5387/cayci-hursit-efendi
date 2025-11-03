@@ -39,9 +39,9 @@ export async function POST(req: NextRequest) {
     const type = "Auth";
     const storeTypeResolved = storeType || "3d_pay_hosting";
 
-    // Klasik hash dizilimi (çoğu Ziraat/NestPay kurulumunda):
-    // clientid + oid + amount + okUrl + failUrl + trantype + installment + rnd + storeKey
-    const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment}${rnd}${storeKey}`;
+    // Alternatif: Bazı Ziraat kurulumlarında storetype da hash'e dahil edilir
+    // clientid + oid + amount + okUrl + failUrl + trantype + installment + rnd + storetype + storeKey
+    const plain = `${merchantId}${oid}${amount}${okUrl}${failUrl}${type}${installment}${rnd}${storeTypeResolved}${storeKey}`;
     const hash = crypto.createHash("sha1").update(plain, "utf8").digest("base64");
 
     const action = posUrl.startsWith("http") ? posUrl : `https://${posUrl}`;
