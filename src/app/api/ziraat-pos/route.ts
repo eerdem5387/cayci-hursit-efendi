@@ -48,18 +48,22 @@ export async function POST(req: NextRequest) {
     // 5) SHA512 -> hex -> base64
 
     const action = posUrl.startsWith("http") ? posUrl : `https://${posUrl}`;
+    // Parametre isimlerini dokümandaki orijinal casing ile kullan
     const baseParams: Record<string, string> = {
+        amount: amount,
+        callbackUrl: callbackUrl,
         clientid: merchantId,
-        oid,
-        amount,
-        okUrl,
-        failUrl,
-        callbackurl: callbackUrl,
-        rnd,
+        currency: currency,
+        failUrl: failUrl,
+        hashAlgorithm: "ver3",
+        Instalment: "", // taksit boş da olsa parametre gönderilir
+        lang: lang,
+        okurl: okUrl,
+        oid: oid,
+        rnd: rnd,
         storetype: storeTypeResolved,
-        trantype: type,
-        lang,
-        currency,
+        TranType: type,
+        encoding: "utf-8",
     };
 
     // Compute HASH per doc
@@ -73,7 +77,7 @@ export async function POST(req: NextRequest) {
     }).join("|") + "|" + storeKey.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
     const sha512hex = crypto.createHash("sha512").update(escapedJoin, "utf8").digest("hex");
     const hash = Buffer.from(sha512hex, "hex").toString("base64");
-    const params: Record<string, string> = { ...baseParams, HASH: hash };
+    const params: Record<string, string> = { ...baseParams, hash, HASH: hash };
 
     // Debug: init log (last 50)
     try {
