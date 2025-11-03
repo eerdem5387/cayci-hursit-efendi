@@ -66,11 +66,18 @@ export async function POST(req: NextRequest) {
         encoding: "utf-8",
     };
 
-    // Compute HASH per doc
+    // Compute HASH per doc - case-insensitive natural sort (PHP natcasesort equivalent)
     const keys = Object.keys(baseParams).filter(k => {
         const lk = k.toLowerCase();
         return lk !== "hash" && lk !== "encoding";
-    }).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "accent", numeric: true }));
+    }).sort((a, b) => {
+        // Case-insensitive natural sort
+        const aLower = a.toLowerCase();
+        const bLower = b.toLowerCase();
+        if (aLower !== bLower) return aLower.localeCompare(bLower, undefined, { numeric: true, sensitivity: "base" });
+        // If case-insensitive equal, maintain original order
+        return 0;
+    });
     const escapedJoin = keys.map(k => {
         const v = String(baseParams[k] ?? "");
         return v.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
