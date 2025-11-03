@@ -1,6 +1,13 @@
 import Link from "next/link";
 
 export default function ThanksPage() {
+  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const paid = params?.get("paid") === "1";
+  const msg = params?.get("msg") || "";
+  const title = paid ? "Ödeme Başarılı" : "Siparişiniz Alındı";
+  const desc = paid
+    ? "Ödemeniz başarıyla alındı. Siparişiniz işleme alındı."
+    : (msg ? `Ödeme doğrulanamadı: ${decodeURIComponent(msg)}` : "Siparişiniz başarıyla oluşturuldu. En kısa sürede işleme koyacağız ve size e‑posta ile bilgi vereceğiz.");
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 md:px-6">
       <div className="text-center">
@@ -9,10 +16,8 @@ export default function ThanksPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h1 className="mb-4 text-3xl font-bold text-gray-900">Siparişiniz Alındı!</h1>
-        <p className="mb-8 text-lg text-gray-600">
-          Siparişiniz başarıyla oluşturuldu. En kısa sürede işleme koyacağız ve size e-posta ile bilgi vereceğiz.
-        </p>
+        <h1 className="mb-4 text-3xl font-bold text-gray-900">{title}!</h1>
+        <p className="mb-8 text-lg text-gray-600">{desc}</p>
         
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-xl font-semibold text-gray-900">Sipariş Detayları</h2>
