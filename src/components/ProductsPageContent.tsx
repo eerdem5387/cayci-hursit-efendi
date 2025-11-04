@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Product {
   id: string;
@@ -87,12 +88,14 @@ export default function ProductsPageContent({ products, brands, brandParam, bran
               variants={itemVariants}
               className="group rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
             >
-              <div className="mb-4 aspect-square overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center">
-                <img 
-                  src={imageSrc} 
+              <div className="mb-4 aspect-square overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center relative">
+                <Image 
+                  src={imageSrc}
                   alt={p.name}
-                  className="max-h-full max-w-full object-contain transition-transform group-hover:scale-105"
-                  style={{ maxHeight: '100%', maxWidth: '100%' }}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-contain transition-transform group-hover:scale-105"
+                  priority={false}
                 />
               </div>
               <div className="mb-3">
