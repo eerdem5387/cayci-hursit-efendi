@@ -88,7 +88,7 @@ export default function ProductsPageContent({ products, brands, brandParam, bran
               variants={itemVariants}
               className="group rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
             >
-              <div className="mb-4 aspect-square overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center relative">
+              <div className="mb-4 aspect-[4/3] overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center relative">
                 <Image 
                   src={imageSrc}
                   alt={p.name}
