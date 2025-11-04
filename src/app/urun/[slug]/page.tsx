@@ -21,9 +21,9 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
       <div className="grid gap-10 md:grid-cols-2">
         <div>
-          <div className="relative h-96 w-full overflow-hidden rounded-xl border border-gray-200">
+          <div className="relative h-96 w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
             {images[0] ? (
-              <Image src={images[0]} alt={(product as any).name} fill className="object-cover" />
+              <Image src={images[0]} alt={(product as any).name} fill className="object-contain" />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-500">Görsel yok</div>
             )}
@@ -31,8 +31,8 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
           {images.length > 1 && (
             <div className="mt-3 grid grid-cols-4 gap-2">
               {images.slice(1).map((src: string) => (
-                <div key={src} className="relative h-20 w-full overflow-hidden rounded border border-gray-200">
-                  <Image src={src} alt={(product as any).name} fill className="object-cover" />
+                <div key={src} className="relative h-20 w-full overflow-hidden rounded border border-gray-200 bg-gray-100">
+                  <Image src={src} alt={(product as any).name} fill className="object-contain" />
                 </div>
               ))}
             </div>
