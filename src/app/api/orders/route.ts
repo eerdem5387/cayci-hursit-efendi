@@ -74,7 +74,6 @@ export async function POST(req: NextRequest) {
         // E-posta bildirimleri
         const settings = await getSettings();
         const adminTo = settings.notifications?.adminEmail || settings.smtp.from || "";
-        const customerTo = email;
         const nameMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.name]));
         const templOrder = {
             id: created.id,
@@ -86,15 +85,9 @@ export async function POST(req: NextRequest) {
             customerName: created.customerName,
         };
         const adminHtml = renderAdminOrderEmail(templOrder as any, settings);
-        const customerHtml = renderCustomerOrderEmail(templOrder as any, settings);
         try {
-            if (adminTo) await sendMail(adminTo, "Yeni siparişiniz var", adminHtml);
-            if (customerTo) await sendMail(customerTo, "Siparişiniz oluşturuldu", customerHtml);
-            // Minimal confirmation mail for some providers
-            try {
-                const trackingUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com"}/siparis-takip/${templOrder.id}`;
-                await sendMail(customerTo, "Siparişiniz Alındı", renderOrderConfirmation({ orderId: templOrder.id, trackingUrl, items: templOrder.items as any }));
-            } catch { }
+            // Sadece admin'e bilgilendirme gönder (ödeme bekleniyor)
+            if (adminTo) await sendMail(adminTo, "Yeni sipariş talebi (ödeme bekleniyor)", adminHtml);
         } catch (e) {
             // e-posta hatası siparişi engellemesin
         }

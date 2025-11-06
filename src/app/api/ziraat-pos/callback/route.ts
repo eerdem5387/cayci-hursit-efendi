@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { getSettings } from "@/lib/data";
+import { getProducts, getSettings } from "@/lib/data";
 import { prisma } from "@/lib/db";
+import { sendMail } from "@/lib/mailer";
+import { renderCustomerOrderEmail, renderOrderConfirmation } from "@/lib/emails";
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,6 +47,29 @@ export async function POST(req: NextRequest) {
     if (verified && (mdStatus === "1") && (response.toLowerCase() === "approved")) {
       if (oid) {
         await prisma.order.updateMany({ where: { id: oid }, data: { status: "paid" } });
+        // Müşteriye ödeme onay e-postası gönder
+        try {
+          const order = await prisma.order.findUnique({ where: { id: oid }, include: { items: true } });
+          if (order && order.customerEmail) {
+            const settingsFull = await getSettings();
+            const products = await getProducts();
+            const priceMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.price]));
+            const nameMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.name]));
+            const templOrder: any = {
+              id: order.id,
+              createdAt: order.createdAt.toISOString(),
+              customer: { ad: order.customerAd, email: order.customerEmail, adres: order.customerAdres, sehir: order.customerSehir, telefon: order.customerTelefon },
+              items: order.items.map((i: any) => ({ slug: i.slug, qty: i.qty, name: nameMap[i.slug], price: priceMap[i.slug] })),
+              status: "paid",
+              total: order.total,
+              customerName: order.customerName,
+            };
+            const html = renderCustomerOrderEmail(templOrder, settingsFull);
+            await sendMail(order.customerEmail, "Ödemeniz alındı – Siparişiniz oluşturuldu", html);
+            // Minimal takip linkli teyit
+            await sendMail(order.customerEmail, "Siparişiniz Alındı", renderOrderConfirmation({ orderId: order.id }));
+          }
+        } catch { }
       }
       return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=1&mdStatus=${encodeURIComponent(mdStatus)}&resp=${encodeURIComponent(response)}&prc=${encodeURIComponent(prc)}`, 303);
     }

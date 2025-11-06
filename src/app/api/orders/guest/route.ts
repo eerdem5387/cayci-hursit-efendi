@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
 import { sendMail } from "@/lib/mailer";
-import { renderAdminOrderEmail, renderOrderConfirmation } from "@/lib/emails";
+import { renderAdminOrderEmail } from "@/lib/emails";
 import { getProducts, getSettings } from "@/lib/data";
 
 function createTrackingToken(): string {
@@ -62,17 +62,9 @@ export async function POST(req: NextRequest) {
       });
     } catch (_) { }
 
-    // E-posta bildirimi (errors swallowed to not block checkout)
+    // E-posta bildirimi (ödeme öncesi sadece admin'e)
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com";
-      const trackingUrl = token ? `${baseUrl}/siparis-takip/${token}` : undefined;
       const items = Array.isArray(data.items) ? data.items.map((i: any) => ({ slug: String(i.slug), qty: Number(i.qty || 0) })).filter((i: any) => i.slug && i.qty > 0) : [];
-      await sendMail(
-        data.email,
-        "Siparişiniz Alındı",
-        renderOrderConfirmation({ orderId: created.id, trackingUrl, items })
-      );
-
       // Admin'e özet e-posta
       const settings = await getSettings();
       const adminTo = settings.notifications?.adminEmail || settings.smtp.from || "";
@@ -87,7 +79,7 @@ export async function POST(req: NextRequest) {
           items: items.map((i: any) => ({ slug: i.slug, qty: i.qty, name: nameMap[i.slug], price: priceMap[i.slug] })),
         } as any;
         const adminHtml = renderAdminOrderEmail(templOrder, settings);
-        await sendMail(adminTo, "Yeni siparişiniz var", adminHtml);
+        await sendMail(adminTo, "Yeni sipariş talebi (ödeme bekleniyor)", adminHtml);
       }
     } catch (_) { }
 
