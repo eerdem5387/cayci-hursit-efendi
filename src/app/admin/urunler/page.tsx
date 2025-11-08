@@ -60,6 +60,11 @@ export default function ProductsAdmin() {
     flash("Güncellendi");
   };
   const remove = async (id: string) => {
+    const product = products.find(p => p.id === id);
+    const productName = product?.name || "bu ürün";
+    const confirmed = window.confirm(`"${productName}" ürününü silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`);
+    if (!confirmed) return;
+    
     await fetch(`/api/admin/products?id=${id}`, { method: "DELETE" });
     load();
     flash("Silindi");
