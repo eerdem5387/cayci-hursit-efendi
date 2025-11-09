@@ -47,7 +47,18 @@ export default function OrderDetail({ params }: { params: Promise<{ id: string }
           setOrder(foundOrder);
         }
         
-        setProducts(Array.isArray(productsRes) ? productsRes : []);
+        const productsList = Array.isArray(productsRes) ? productsRes : [];
+        setProducts(productsList);
+        
+        // Debug: Ürünlerin yüklendiğini kontrol et
+        console.log("Yüklenen ürün sayısı:", productsList.length);
+        if (foundOrder) {
+          console.log("Sipariş kalemleri:", foundOrder.items);
+          foundOrder.items.forEach((item) => {
+            const product = productsList.find((p: Product) => p.slug === item.slug);
+            console.log(`Ürün slug: ${item.slug}, Bulundu: ${product ? product.name : "BULUNAMADI"}`);
+          });
+        }
       } catch (err: any) {
         console.error("Sipariş detay yükleme hatası:", err);
         setError(err?.message || "Bir hata oluştu");
@@ -89,7 +100,14 @@ export default function OrderDetail({ params }: { params: Promise<{ id: string }
     }
   };
 
-  const getProduct = (slug: string) => products.find(p => p.slug === slug);
+  const getProduct = (slug: string) => {
+    const product = products.find(p => p.slug === slug);
+    // Eğer bulunamazsa, case-insensitive arama dene
+    if (!product) {
+      return products.find(p => p.slug.toLowerCase() === slug.toLowerCase());
+    }
+    return product;
+  };
 
   const totals = useMemo(() => {
     const totalQty = order?.items.reduce((a, b) => a + b.qty, 0) || 0;
@@ -144,6 +162,15 @@ export default function OrderDetail({ params }: { params: Promise<{ id: string }
     );
   }
 
+  // Ürünler yüklenene kadar bekle (sadece ilk yüklemede)
+  if (products.length === 0 && !loading) {
+    return (
+      <div className="px-4 py-8 text-center">
+        <div className="text-gray-500">Ürün bilgileri yükleniyor...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-6">
       <div className="flex items-center justify-between">
@@ -157,13 +184,22 @@ export default function OrderDetail({ params }: { params: Promise<{ id: string }
           <div className="space-y-3">
             {order.items.map((item) => {
               const product = getProduct(item.slug);
-              const productName = product?.name || `Ürün bulunamadı (${item.slug})`;
+              // Slug'ı daha okunabilir hale getir (tireleri boşluklarla değiştir, baş harfleri büyüt)
+              const formatSlug = (slug: string) => {
+                return slug
+                  .split('-')
+                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ');
+              };
+              const productName = product?.name || formatSlug(item.slug);
               return (
                 <div key={item.slug} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">{productName}</div>
                     {!product && (
-                      <div className="text-xs text-amber-600 mt-1">⚠️ Bu ürün sistemde bulunamadı</div>
+                      <div className="text-xs text-amber-600 mt-1">
+                        ⚠️ Bu ürün sistemde bulunamadı (slug: {item.slug})
+                      </div>
                     )}
                     {product?.weightKg && (
                       <div className="text-sm text-gray-600 mt-1">{product.weightKg} kg</div>
