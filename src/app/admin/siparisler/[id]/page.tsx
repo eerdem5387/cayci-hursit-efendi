@@ -27,17 +27,21 @@ export default function OrderDetail({ params }: { params: Promise<{ id: string }
         setLoading(true);
         setError(null);
         
-        const [ordersRes, productsRes] = await Promise.all([
-          fetch("/api/orders?page=1&pageSize=1000").then((r) => {
-            if (!r.ok) throw new Error("Siparişler yüklenemedi");
-            return r.json();
-          }),
+        // Önce ürünleri yükle, sonra siparişleri
+        const [productsRes, ordersRes] = await Promise.all([
           fetch("/api/products").then((r) => {
             if (!r.ok) throw new Error("Ürünler yüklenemedi");
+            return r.json();
+          }),
+          fetch("/api/orders?page=1&pageSize=1000").then((r) => {
+            if (!r.ok) throw new Error("Siparişler yüklenemedi");
             return r.json();
           })
         ]);
 
+        const productsList = Array.isArray(productsRes) ? productsRes : [];
+        setProducts(productsList);
+        
         const list = Array.isArray(ordersRes) ? ordersRes : (ordersRes.items || []);
         const foundOrder = list.find((x: Order) => x.id === id) || null;
         
@@ -47,17 +51,25 @@ export default function OrderDetail({ params }: { params: Promise<{ id: string }
           setOrder(foundOrder);
         }
         
-        const productsList = Array.isArray(productsRes) ? productsRes : [];
-        setProducts(productsList);
-        
-        // Debug: Ürünlerin yüklendiğini kontrol et
-        console.log("Yüklenen ürün sayısı:", productsList.length);
-        if (foundOrder) {
-          console.log("Sipariş kalemleri:", foundOrder.items);
-          foundOrder.items.forEach((item: { slug: string; qty: number }) => {
-            const product = productsList.find((p: Product) => p.slug === item.slug);
-            console.log(`Ürün slug: ${item.slug}, Bulundu: ${product ? product.name : "BULUNAMADI"}`);
-          });
+        // Debug: Sadece development'ta
+        if (process.env.NODE_ENV === 'development') {
+          console.log("Yüklenen ürün sayısı:", productsList.length);
+          if (foundOrder) {
+            console.log("Sipariş kalemleri:", foundOrder.items);
+            foundOrder.items.forEach((item: { slug: string; qty: number }) => {
+              const product = productsList.find((p: Product) => p.slug === item.slug);
+              console.log(`Ürün slug: ${item.slug}, Bulundu: ${product ? product.name : "BULUNAMADI"}`);
+              if (!product) {
+                // Slug benzerliğini kontrol et
+                const similar = productsList.filter((p: Product) => 
+                  p.slug.includes(item.slug) || item.slug.includes(p.slug)
+                );
+                if (similar.length > 0) {
+                  console.log(`Benzer slug'lar bulundu:`, similar.map((p: Product) => p.slug));
+                }
+              }
+            });
+          }
         }
       } catch (err: any) {
         console.error("Sipariş detay yükleme hatası:", err);
@@ -101,11 +113,46 @@ export default function OrderDetail({ params }: { params: Promise<{ id: string }
   };
 
   const getProduct = (slug: string) => {
-    const product = products.find(p => p.slug === slug);
-    // Eğer bulunamazsa, case-insensitive arama dene
+    // Önce tam eşleşme
+    let product = products.find(p => p.slug === slug);
+    
+    // Eğer bulunamazsa, case-insensitive arama
     if (!product) {
-      return products.find(p => p.slug.toLowerCase() === slug.toLowerCase());
+      product = products.find(p => p.slug.toLowerCase() === slug.toLowerCase());
     }
+    
+    // Eğer hala bulunamazsa, slug'ın bir kısmını içeren ürünleri ara
+    if (!product) {
+      const normalizedSlug = slug.toLowerCase().replace(/-/g, '');
+      product = products.find(p => {
+        const normalizedProductSlug = p.slug.toLowerCase().replace(/-/g, '');
+        return normalizedProductSlug === normalizedSlug || 
+               normalizedProductSlug.includes(normalizedSlug) ||
+               normalizedSlug.includes(normalizedProductSlug);
+      });
+    }
+    
+    // Eğer hala bulunamazsa, slug'dan ürün adını tahmin etmeye çalış
+    // Örnek: "gold-serisi-d-kme-ay-may-s-ay" -> "Gold Serisi Dökme Çay" içeren ürünü ara
+    if (!product) {
+      const slugWords = slug.split('-').filter(w => w.length > 2); // Kısa kelimeleri filtrele (d, k, s gibi)
+      const importantWords = slugWords.filter(w => !['ay', 'serisi', 'seri'].includes(w.toLowerCase()));
+      
+      if (importantWords.length > 0) {
+        product = products.find(p => {
+          const productNameLower = p.name.toLowerCase();
+          const productSlugLower = p.slug.toLowerCase();
+          
+          // Önemli kelimelerin çoğu ürün adında veya slug'ında var mı?
+          const matches = importantWords.filter(word => 
+            productNameLower.includes(word) || productSlugLower.includes(word)
+          ).length;
+          
+          return matches >= Math.min(2, importantWords.length); // En az 2 kelime eşleşmeli
+        });
+      }
+    }
+    
     return product;
   };
 
