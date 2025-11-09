@@ -5,10 +5,10 @@ export default function Footer() {
     <footer className="mt-16 border-t border-gray-200 bg-[#194A33]">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-8 sm:grid-cols-2 md:grid-cols-4 md:gap-8 md:px-6 md:py-10">
         <div className="sm:col-span-2 md:col-span-1">
-          <div className="mb-4 flex items-center gap-2">
-            <img src="/hursit_efendi_logo.png" alt="Hursit Efendi Logo" className="h-10 w-auto md:h-12" />
+          <div className="mb-5 sm:mb-6 flex items-center gap-2">
+            <img src="/hursit_efendi_logo.png" alt="Hursit Efendi Logo" className="h-16 w-auto sm:h-20 md:h-24 lg:h-28 drop-shadow" />
           </div>
-          <p className="text-sm leading-relaxed text-white/90">
+          <p className="text-sm sm:text-base leading-relaxed text-white/90">
             1983'ten bugüne gerçek çay tadı. Organik ve hijyenik üretim.
           </p>
         </div>
