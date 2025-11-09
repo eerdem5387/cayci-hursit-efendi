@@ -54,7 +54,7 @@ export default function OrderDetail({ params }: { params: Promise<{ id: string }
         console.log("Yüklenen ürün sayısı:", productsList.length);
         if (foundOrder) {
           console.log("Sipariş kalemleri:", foundOrder.items);
-          foundOrder.items.forEach((item) => {
+          foundOrder.items.forEach((item: { slug: string; qty: number }) => {
             const product = productsList.find((p: Product) => p.slug === item.slug);
             console.log(`Ürün slug: ${item.slug}, Bulundu: ${product ? product.name : "BULUNAMADI"}`);
           });
