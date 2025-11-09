@@ -174,10 +174,10 @@ export default function CheckoutPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-10 md:px-6">
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:py-10 md:px-6">
         <div className="text-center py-12">
-          <div className="text-gray-500 text-lg mb-4">Sepetiniz boş</div>
-          <Link href="/urunlerimiz" className="inline-block rounded bg-emerald-700 px-6 py-3 text-white hover:bg-emerald-800">
+          <div className="text-gray-500 text-base sm:text-lg mb-4">Sepetiniz boş</div>
+          <Link href="/urunlerimiz" className="inline-block rounded-lg bg-emerald-700 px-6 py-3 text-base font-medium text-white hover:bg-emerald-800 transition-colors touch-manipulation">
             Alışverişe Devam Et
           </Link>
         </div>
@@ -186,20 +186,23 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 md:px-6">
-      <h1 className="mb-8 text-3xl font-bold text-gray-900">Ödeme</h1>
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8 md:px-6 md:py-10">
+      <h1 className="mb-6 text-2xl font-bold text-gray-900 sm:mb-8 sm:text-3xl">Ödeme</h1>
       
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2">
-          <form onSubmit={submit} className="space-y-6">
-            <div className="rounded-xl border border-gray-200 bg-white p-6">
-              <h2 className="mb-4 text-xl font-semibold text-gray-900">Teslimat Bilgileri</h2>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Ad Soyad *</label>
+          <form onSubmit={submit} className="space-y-4 sm:space-y-6">
+            <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
+              <h2 className="mb-4 text-lg sm:text-xl font-semibold text-gray-900">Teslimat Bilgileri</h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2 md:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Ad Soyad *</label>
                   <input 
                     name="ad" 
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                    type="text"
+                    inputMode="text"
+                    autoComplete="name"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-colors touch-manipulation" 
                     placeholder="Ad Soyad" 
                     value={formData.ad}
                     onChange={(e) => setFormData({...formData, ad: e.target.value})}
@@ -207,26 +210,30 @@ export default function CheckoutPage() {
                     readOnly={!!session}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">E-posta *</label>
+                <div className="sm:col-span-2 md:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">E-posta *</label>
                   <input 
                     name="email" 
-                    type="email" 
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
-                    placeholder="E-posta" 
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-colors touch-manipulation" 
+                    placeholder="ornek@email.com" 
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     required 
                     readOnly={!!session}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefon *</label>
+                <div className="sm:col-span-2 md:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Telefon *</label>
                   <input 
                     name="telefon" 
                     type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
                     maxLength={14}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-colors touch-manipulation" 
                     placeholder="0XXX XXX XX XX" 
                     value={formData.telefon}
                     onChange={(e) => {
@@ -236,24 +243,28 @@ export default function CheckoutPage() {
                     required 
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Şehir *</label>
+                <div className="sm:col-span-2 md:col-span-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Şehir *</label>
                   <input 
                     name="sehir" 
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                    type="text"
+                    inputMode="text"
+                    autoComplete="address-level2"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-colors touch-manipulation" 
                     placeholder="Şehir" 
                     value={formData.sehir}
                     onChange={(e) => setFormData({...formData, sehir: e.target.value})}
                     required 
                   />
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Adres *</label>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Adres *</label>
                   <textarea 
                     name="adres" 
                     rows={3}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
-                    placeholder="Tam adres" 
+                    autoComplete="street-address"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-colors touch-manipulation resize-none" 
+                    placeholder="Tam adres bilgisi" 
                     value={formData.adres}
                     onChange={(e) => setFormData({...formData, adres: e.target.value})}
                     required 
@@ -261,43 +272,67 @@ export default function CheckoutPage() {
                 </div>
               </div>
               {!session && (
-                <div className="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-amber-900">
-                  <input id="guest-ok" type="checkbox" className="mt-1" checked={agreeGuest} onChange={(e)=>setAgreeGuest(e.target.checked)} />
-                  <label htmlFor="guest-ok" className="text-sm">
+                <div className="mt-4 flex items-start gap-3 rounded-lg bg-amber-50 p-3 sm:p-4 text-amber-900">
+                  <input 
+                    id="guest-ok" 
+                    type="checkbox" 
+                    className="mt-1 h-5 w-5 cursor-pointer touch-manipulation" 
+                    checked={agreeGuest} 
+                    onChange={(e)=>setAgreeGuest(e.target.checked)} 
+                  />
+                  <label htmlFor="guest-ok" className="text-sm leading-relaxed cursor-pointer touch-manipulation">
                     Üye olmadan devam ettiğimin farkındayım. Siparişimi e‑posta yoluyla takip edeceğim.
                   </label>
                 </div>
               )}
-              <div className="mt-4 space-y-2 rounded-lg bg-gray-50 p-3 text-gray-800">
-                <label className="flex items-start gap-2 text-sm">
-                  <input type="checkbox" className="mt-1" checked={agreeKvkk} onChange={(e)=>setAgreeKvkk(e.target.checked)} />
-                  <span>
-                    <a className="text-emerald-700 hover:underline" href="/kvkk-aydinlatma-metni" target="_blank">KVKK Aydınlatma Metni</a>'ni okudum ve kabul ediyorum.
+              <div className="mt-4 space-y-3 rounded-lg bg-gray-50 p-3 sm:p-4 text-gray-800">
+                <label className="flex items-start gap-3 text-sm cursor-pointer touch-manipulation">
+                  <input 
+                    type="checkbox" 
+                    className="mt-1 h-5 w-5 cursor-pointer touch-manipulation" 
+                    checked={agreeKvkk} 
+                    onChange={(e)=>setAgreeKvkk(e.target.checked)} 
+                  />
+                  <span className="leading-relaxed">
+                    <a className="text-emerald-700 hover:underline font-medium" href="/kvkk-aydinlatma-metni" target="_blank" rel="noopener noreferrer">KVKK Aydınlatma Metni</a>'ni okudum ve kabul ediyorum.
                   </span>
                 </label>
-                <label className="flex items-start gap-2 text-sm">
-                  <input type="checkbox" className="mt-1" checked={agreeMesafeli} onChange={(e)=>setAgreeMesafeli(e.target.checked)} />
-                  <span>
-                    <a className="text-emerald-700 hover:underline" href="/mesafeli-satis-sozlesmesi" target="_blank">Mesafeli Satış Sözleşmesi</a>'ni okudum ve kabul ediyorum.
+                <label className="flex items-start gap-3 text-sm cursor-pointer touch-manipulation">
+                  <input 
+                    type="checkbox" 
+                    className="mt-1 h-5 w-5 cursor-pointer touch-manipulation" 
+                    checked={agreeMesafeli} 
+                    onChange={(e)=>setAgreeMesafeli(e.target.checked)} 
+                  />
+                  <span className="leading-relaxed">
+                    <a className="text-emerald-700 hover:underline font-medium" href="/mesafeli-satis-sozlesmesi" target="_blank" rel="noopener noreferrer">Mesafeli Satış Sözleşmesi</a>'ni okudum ve kabul ediyorum.
                   </span>
                 </label>
-                <label className="flex items-start gap-2 text-sm">
-                  <input type="checkbox" className="mt-1" checked={agreeIade} onChange={(e)=>setAgreeIade(e.target.checked)} />
-                  <span>
-                    <a className="text-emerald-700 hover:underline" href="/iade-iptal-kosullari" target="_blank">İade ve İptal Koşulları</a>'nı okudum ve kabul ediyorum.
+                <label className="flex items-start gap-3 text-sm cursor-pointer touch-manipulation">
+                  <input 
+                    type="checkbox" 
+                    className="mt-1 h-5 w-5 cursor-pointer touch-manipulation" 
+                    checked={agreeIade} 
+                    onChange={(e)=>setAgreeIade(e.target.checked)} 
+                  />
+                  <span className="leading-relaxed">
+                    <a className="text-emerald-700 hover:underline font-medium" href="/iade-iptal-kosullari" target="_blank" rel="noopener noreferrer">İade ve İptal Koşulları</a>'nı okudum ve kabul ediyorum.
                   </span>
                 </label>
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-6">
-              <h2 className="mb-4 text-xl font-semibold text-gray-900">Ödeme Bilgileri</h2>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6">
+              <h2 className="mb-4 text-lg sm:text-xl font-semibold text-gray-900">Ödeme Bilgileri</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Kart Üzerindeki İsim *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Kart Üzerindeki İsim *</label>
                   <input 
                     name="kartAd" 
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                    type="text"
+                    inputMode="text"
+                    autoComplete="cc-name"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-colors touch-manipulation" 
                     placeholder="Kart üzerindeki isim" 
                     value={formData.kartAd}
                     onChange={(e) => setFormData({...formData, kartAd: e.target.value})}
@@ -305,12 +340,14 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Kart Numarası *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Kart Numarası *</label>
                   <input 
                     name="kartNo" 
                     type="text"
+                    inputMode="numeric"
+                    autoComplete="cc-number"
                     maxLength={19}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-colors touch-manipulation" 
                     placeholder="1234 5678 9012 3456" 
                     value={formData.kartNo}
                     onChange={(e) => {
@@ -320,14 +357,16 @@ export default function CheckoutPage() {
                     required 
                   />
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Son Kullanım Tarihi *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Son Kullanım Tarihi *</label>
                     <input 
                       name="sonKullanim" 
                       type="text"
+                      inputMode="numeric"
+                      autoComplete="cc-exp"
                       maxLength={5}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-colors touch-manipulation" 
                       placeholder="MM/YY" 
                       value={formData.sonKullanim}
                       onChange={(e) => {
@@ -338,12 +377,14 @@ export default function CheckoutPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">CVV *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">CVV *</label>
                     <input 
                       name="cvv" 
                       type="password"
+                      inputMode="numeric"
+                      autoComplete="cc-csc"
                       maxLength={4}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" 
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-colors touch-manipulation" 
                       placeholder="123" 
                       value={formData.cvv}
                       onChange={(e) => {
@@ -358,8 +399,9 @@ export default function CheckoutPage() {
             </div>
 
             <button 
+              type="submit"
               disabled={submitting} 
-              className="w-full rounded-lg bg-emerald-700 px-6 py-3 text-lg font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
+              className="w-full rounded-lg bg-emerald-700 px-6 py-4 text-base sm:text-lg font-semibold text-white hover:bg-emerald-800 active:bg-emerald-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
             >
               {submitting ? "Sipariş Oluşturuluyor..." : "Siparişi Tamamla"}
             </button>
@@ -367,15 +409,15 @@ export default function CheckoutPage() {
         </div>
 
         <div className="lg:col-span-1">
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="sticky top-4 rounded-xl border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
             <h3 className="mb-4 text-lg font-semibold text-gray-900">Sipariş Özeti</h3>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[400px] overflow-y-auto">
               {cartItems.map((item) => {
                 const product = getProduct(item.slug);
                 if (!product) return null;
                 return (
                   <div key={item.slug} className="flex items-center gap-3">
-                    <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-gray-100">
+                    <div className="relative h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
                       <img 
                         src={product.images?.[0] || `/images/${product.slug}.jpg`} 
                         alt={product.name}
@@ -383,13 +425,13 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">{product.name}</div>
+                      <div className="text-sm font-medium text-gray-900 line-clamp-2">{product.name}</div>
                       {product.weightKg && (
-                        <div className="text-xs text-gray-600">{product.weightKg} kg</div>
+                        <div className="text-xs text-gray-600 mt-0.5">{product.weightKg} kg</div>
                       )}
-                      <div className="text-sm text-gray-600">Adet: {item.qty}</div>
+                      <div className="text-xs sm:text-sm text-gray-600 mt-0.5">Adet: {item.qty}</div>
                     </div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 whitespace-nowrap">
                       {(product.price * item.qty).toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}
                     </div>
                   </div>
@@ -398,14 +440,14 @@ export default function CheckoutPage() {
             </div>
             <div className="mt-4 space-y-2 border-t border-gray-200 pt-4">
               <div className="flex justify-between text-sm">
-                <span>Ara Toplam</span>
-                <span>{total.toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}</span>
+                <span className="text-gray-600">Ara Toplam</span>
+                <span className="font-medium">{total.toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>Kargo</span>
-                <span className="text-emerald-700">Ücretsiz</span>
+                <span className="text-gray-600">Kargo</span>
+                <span className="font-medium text-emerald-700">Ücretsiz</span>
               </div>
-              <div className="flex justify-between text-lg font-bold">
+              <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
                 <span>Toplam</span>
                 <span className="text-emerald-700">{total.toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}</span>
               </div>

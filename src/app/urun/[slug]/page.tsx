@@ -18,12 +18,19 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
   const inStock = (product as any).stock === null || (product as any).stock === undefined || ((product as any).stock ?? 0) > 0;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
-      <div className="grid gap-10 md:grid-cols-2">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8 md:px-6 md:py-10">
+      <div className="grid gap-6 sm:gap-8 md:grid-cols-2 md:gap-10">
         <div>
-          <div className="relative h-[520px] md:h-[560px] w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
+          <div className="relative h-[300px] sm:h-[400px] md:h-[560px] w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
             {images[0] ? (
-              <Image src={images[0]} alt={(product as any).name} fill className="object-contain" />
+              <Image 
+                src={images[0]} 
+                alt={(product as any).name} 
+                fill 
+                className="object-contain" 
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
+              />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-500">Görsel yok</div>
             )}
@@ -31,39 +38,69 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
           {images.length > 1 && (
             <div className="mt-3 grid grid-cols-4 gap-2">
               {images.slice(1).map((src: string) => (
-                <div key={src} className="relative h-24 w-full overflow-hidden rounded border border-gray-200 bg-gray-100">
-                  <Image src={src} alt={(product as any).name} fill className="object-contain" />
+                <div key={src} className="relative h-16 sm:h-20 md:h-24 w-full overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
+                  <Image 
+                    src={src} 
+                    alt={(product as any).name} 
+                    fill 
+                    className="object-contain" 
+                    sizes="(max-width: 768px) 25vw, 12.5vw"
+                  />
                 </div>
               ))}
             </div>
           )}
         </div>
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{(product as any).name}</h1>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{(product as any).name}</h1>
             {inStock ? (
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 whitespace-nowrap">
                 {product.stock === null || product.stock === undefined ? "Stokta (Sınırsız)" : "Stokta"}
               </span>
             ) : (
-              <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">Stokta yok</span>
+              <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 whitespace-nowrap">Stokta yok</span>
             )}
           </div>
-          {brand && <div className="mt-1 text-sm text-gray-600">Marka: {(brand as any).name}</div>}
-          <div className="mt-4 text-2xl font-semibold text-emerald-700">{(product as any).price.toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}</div>
+          {brand && <div className="mt-2 text-sm text-gray-600">Marka: {(brand as any).name}</div>}
+          <div className="mt-4 text-2xl sm:text-3xl font-semibold text-emerald-700">{(product as any).price.toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}</div>
           <ul className="mt-3 text-sm text-gray-700">
             {(product as any).weightKg ? <li>Ağırlık: {(product as any).weightKg} kg</li> : null}
           </ul>
           {(product as any).description && (
-            <p className="mt-4 whitespace-pre-line text-gray-800">{(product as any).description}</p>
+            <p className="mt-4 whitespace-pre-line text-sm sm:text-base leading-relaxed text-gray-800">{(product as any).description}</p>
           )}
-          <form action="/sepet/ekle" method="post" className="mt-6 flex items-center gap-3">
-            <input type="hidden" name="slug" value={(product as any).slug} />
-            <input type="number" name="adet" min={1} defaultValue={1} className="w-20 rounded border border-gray-300 px-3 py-2" />
-            <button disabled={!inStock} className="rounded bg-emerald-700 px-4 py-2 text-white disabled:opacity-60">Sepete Ekle</button>
+          <form action="/sepet/ekle" method="post" className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <input 
+              type="hidden" 
+              name="slug" 
+              value={(product as any).slug} 
+            />
+            <input 
+              type="number" 
+              name="adet" 
+              min={1} 
+              defaultValue={1} 
+              className="w-full sm:w-24 rounded-lg border border-gray-300 px-4 py-3 text-base text-center focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 touch-manipulation" 
+            />
+            <button 
+              type="submit"
+              disabled={!inStock} 
+              className="w-full sm:w-auto rounded-lg bg-emerald-700 px-6 py-3 text-base font-semibold text-white hover:bg-emerald-800 active:bg-emerald-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors touch-manipulation"
+            >
+              Sepete Ekle
+            </button>
           </form>
           <div className="mt-6">
-            <Link href="/urunlerimiz" className="text-sm text-emerald-700">Tüm ürünlere dön</Link>
+            <Link 
+              href="/urunlerimiz" 
+              className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700 hover:text-emerald-800 transition-colors touch-manipulation"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Tüm ürünlere dön
+            </Link>
           </div>
         </div>
       </div>

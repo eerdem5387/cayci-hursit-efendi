@@ -24,6 +24,11 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: settings.site.description,
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+    icons: {
+      icon: "/hursit_efendi_logo.png",
+      shortcut: "/hursit_efendi_logo.png",
+      apple: "/hursit_efendi_logo.png",
+    },
   };
 }
 
@@ -49,13 +54,13 @@ export default function RootLayout({
           {/* Floating WhatsApp button */}
           <a
             href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP?.replace(/[^\d]/g, "") || "905555555555"}?text=${encodeURIComponent("Merhaba, destek almak istiyorum.")}`}
-            className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-3 text-white shadow-lg transition hover:bg-emerald-700"
+            className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-40 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-3 text-white shadow-lg transition-colors hover:bg-emerald-700 active:bg-emerald-800 touch-manipulation"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="WhatsApp Destek"
           >
-            <img src="/images/whatsapp.svg" alt="WhatsApp" className="h-5 w-5" />
-            <span className="hidden md:inline">WhatsApp</span>
+            <img src="/images/whatsapp.svg" alt="WhatsApp" className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="hidden sm:inline text-sm font-medium">WhatsApp</span>
           </a>
         </Providers>
       </body>
