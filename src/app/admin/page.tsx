@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-type KPI = { 
+type KPI = {
   products: number; 
   brands: number; 
   orders: number; 
@@ -17,6 +17,7 @@ type KPI = {
     status: string;
     total: number;
     customerName: string;
+    productNames: string;
   }[];
   popularProducts: {
     id: string;
@@ -53,13 +54,37 @@ export default function AdminHome() {
       const recent = (orders as any[])
         .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
         .slice(0, 5)
-        .map((o) => ({ 
-          id: o.id, 
-          createdAt: o.createdAt,
-          status: o.status || 'Onay Bekliyor',
-          total: o.total || 0,
-          customerName: o.customerName || 'Müşteri'
-        }));
+        .map((o) => {
+          // Siparişteki ürün isimlerini bul
+          const productNames: string[] = [];
+          if (o.items && Array.isArray(o.items)) {
+            o.items.forEach((item: any) => {
+              const product = (products as any[]).find((p: any) => p.slug === item.slug);
+              if (product) {
+                productNames.push(product.name);
+              } else {
+                // Ürün bulunamazsa slug'ı formatla
+                const formattedSlug = item.slug
+                  .split('-')
+                  .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ');
+                productNames.push(formattedSlug);
+              }
+            });
+          }
+          const productDisplay = productNames.length > 0 
+            ? productNames.join(', ') 
+            : 'Ürün bilgisi yok';
+          
+          return { 
+            id: o.id, 
+            createdAt: o.createdAt,
+            status: o.status || 'Onay Bekliyor',
+            total: o.total || 0,
+            customerName: o.customerName || 'Müşteri',
+            productNames: productDisplay
+          };
+        });
 
       // Popüler ürünler (satış sayısına göre)
       const productSales = (orders as any[]).reduce((acc: any, order: any) => {
@@ -202,7 +227,7 @@ export default function AdminHome() {
             {(kpi?.recent || []).map((order) => (
               <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">#{order.id}</div>
+                  <div className="font-medium text-gray-900">{order.productNames}</div>
                   <div className="text-sm text-gray-600">{order.customerName}</div>
                   <div className="text-xs text-gray-500">
                     {new Date(order.createdAt).toLocaleString("tr-TR")}
