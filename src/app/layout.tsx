@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { getSettings } from "@/lib/data";
 
+/** DB kullanıldığı için build aşamasında statik ön üretim yapılmaz (Vercel/Neon uyumu). */
+export const dynamic = "force-dynamic";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -15,8 +18,18 @@ const geistMono = Geist_Mono({
 
 // Dinamik metadata oluşturma
 export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSettings();
-  
+  let settings: Awaited<ReturnType<typeof getSettings>>;
+  try {
+    settings = await getSettings();
+  } catch {
+    settings = {
+      site: { title: "Çaycı Hurşit Efendi", description: "Gerçek çay tadı" },
+      smtp: { host: "", port: 587, user: "", pass: "", from: "" },
+      notifications: { adminEmail: "" },
+      payments: { ziraatPos: {} },
+    } as Awaited<ReturnType<typeof getSettings>>;
+  }
+
   return {
     title: {
       default: settings.site.title,

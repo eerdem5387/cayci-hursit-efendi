@@ -2,11 +2,6 @@ import Image from "next/image";
 import { getBrands, getProducts } from "@/lib/data";
 import Link from "next/link";
 
-export async function generateStaticParams() {
-  const products = await getProducts();
-  return (products as any[]).map((p: any) => ({ slug: p.slug }));
-}
-
 export default async function ProductDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const products = await getProducts();
