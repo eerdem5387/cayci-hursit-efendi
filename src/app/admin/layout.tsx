@@ -14,7 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     prisma.order.count({ where: { status: "odeme_incelemede" } }).catch(() => 0),
   ]);
   return (
-    <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 content-start gap-4 px-4 py-4 md:grid-cols-[240px_1fr] md:gap-6 md:px-6 md:py-8 print:block print:p-0">
+    <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-[minmax(0,1fr)] content-start gap-4 px-4 py-4 md:grid-cols-[240px_minmax(0,1fr)] md:gap-6 md:px-6 md:py-8 print:block print:p-0">
       <aside className="-mx-4 border-b border-gray-200 bg-white px-2 py-2 md:mx-0 md:self-start md:rounded-lg md:border md:p-4 print:hidden">
         <div className="mb-4 hidden items-center gap-2 text-sm font-semibold text-gray-900 md:flex">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -35,7 +35,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </form>
         </nav>
       </aside>
-      <section>{children}</section>
+      <section className="min-w-0">{children}</section>
     </div>
   );
 }
