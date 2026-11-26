@@ -1,0 +1,13 @@
+-- Kişiye özel sepet + ödeme takibi + sipariş kalemi fiyat anlık görüntüsü
+ALTER TABLE "CartItem" ADD COLUMN IF NOT EXISTS "cartId" TEXT;
+CREATE INDEX IF NOT EXISTS "CartItem_cartId_idx" ON "CartItem"("cartId");
+
+ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "cartId" TEXT;
+ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "paidAt" TIMESTAMP(3);
+ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "paidAmount" DOUBLE PRECISION;
+ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "paymentRef" TEXT;
+ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "paymentError" TEXT;
+ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "statusReason" TEXT;
+
+ALTER TABLE "OrderItem" ADD COLUMN IF NOT EXISTS "name" TEXT;
+ALTER TABLE "OrderItem" ADD COLUMN IF NOT EXISTS "unitPrice" DOUBLE PRECISION;

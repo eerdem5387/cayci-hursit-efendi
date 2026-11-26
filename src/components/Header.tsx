@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { CART_EVENT } from "@/lib/cartClient";
 import { useSession, signOut } from "next-auth/react";
 
 const navItems = [
@@ -17,6 +18,22 @@ export default function Header() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  // Sepet rozeti: sayfa değişiminde ve sepet güncellendiğinde yenilenir
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/cart", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((c) => { if (alive) setCartCount(Number(c?.count) || 0); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [pathname]);
+  useEffect(() => {
+    const onChange = (e: Event) => setCartCount(Number((e as CustomEvent).detail?.count) || 0);
+    window.addEventListener(CART_EVENT, onChange);
+    return () => window.removeEventListener(CART_EVENT, onChange);
+  }, []);
 
   const activeMap = useMemo(() => {
     const map: Record<string, boolean> = {};
@@ -101,9 +118,14 @@ export default function Header() {
           <Link
             href="/sepet"
             className="inline-flex h-11 w-11 md:h-12 md:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-full bg-white/90 text-emerald-800 shadow hover:bg-white transition-colors touch-manipulation relative"
-            aria-label="Sepet"
+            aria-label={cartCount ? `Sepet (${cartCount} ürün)` : "Sepet"}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="lg:w-6 lg:h-6"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 12.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-bold leading-none text-white ring-2 ring-[#194A33]">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
           </Link>
           
           {/* Mobile Menu Button */}

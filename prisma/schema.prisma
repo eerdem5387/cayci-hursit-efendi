@@ -67,6 +67,13 @@ model Order {
   billingJson   Json?
   clientIp      String?
   userAgent     String?
+  /// Ödeme takibi
+  cartId        String?
+  paidAt        DateTime?
+  paidAmount    Float?
+  paymentRef    String?
+  paymentError  String?
+  statusReason  String?
 }
 
 model OrderItem {
@@ -74,13 +81,19 @@ model OrderItem {
   orderId  String
   slug     String
   qty      Int
+  name     String?
+  unitPrice Float?
   order    Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model CartItem {
-  id    String @id @default(cuid())
-  slug  String
-  qty   Int
+  id     String  @id @default(cuid())
+  /// Ziyaretçiye özel sepet kimliği (httpOnly çerez). Eski, kimliksiz kayıtlar kullanılmaz.
+  cartId String?
+  slug   String
+  qty    Int
+
+  @@index([cartId])
 }
 
 // Site ayarları ve ana sayfa içerikleri için basit tablolar

@@ -1,113 +1,123 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { getProducts } from "@/lib/data";
+import { resolveItems } from "@/lib/orders";
+import { CUSTOMER_STATUS_LABELS, displayOrderNo, formatTRY, statusClass } from "@/lib/orderStatus";
+
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Sipariş Takibi", robots: { index: false } };
+
+const STEPS = [
+  { key: "paid", label: "Ödeme Alındı" },
+  { key: "onaylandi", label: "Hazırlanıyor" },
+  { key: "kargoda", label: "Kargoda" },
+  { key: "teslim_edildi", label: "Teslim Edildi" },
+];
 
 export default async function OrderTrackPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const order = await prisma.order.findFirst({ where: { trackingToken: token }, include: { items: true } });
+  // Yeni bağlantılar takip anahtarını, eski e-postalardaki bağlantılar sipariş kimliğini kullanır
+  const order =
+    (await prisma.order.findFirst({ where: { trackingToken: token }, include: { items: true } })) ||
+    (/^c[a-z0-9]{20,}$/.test(token) ? await prisma.order.findUnique({ where: { id: token }, include: { items: true } }) : null);
+
   if (!order) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 md:px-6">
+      <div className="mx-auto max-w-3xl px-4 py-16 text-center md:px-6">
         <h1 className="text-2xl font-bold text-gray-900">Sipariş bulunamadı</h1>
-        <p className="mt-2 text-gray-600">Bağlantınız geçersiz veya süresi geçmiş olabilir.</p>
+        <p className="mt-2 text-gray-600">Bağlantınız geçersiz olabilir. Yardım için bizimle iletişime geçebilirsiniz.</p>
+        <Link href="/iletisim" className="mt-6 inline-block rounded-lg bg-emerald-700 px-6 py-3 font-medium text-white hover:bg-emerald-800">İletişime Geç</Link>
       </div>
     );
   }
 
-  const products = await getProducts();
-  const nameMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.name]));
-  const priceMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.price]));
-  const imageMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, Array.isArray(p.images) ? p.images[0] : undefined]));
-
-  const steps = [
-    { key: "pending", label: "Beklemede" },
-    { key: "onaylandi", label: "Onaylandı" },
-    { key: "kargoda", label: "Kargoda" },
-    { key: "teslim_edildi", label: "Teslim Edildi" },
-  ];
+  const items = await resolveItems(order.items);
   const status = String(order.status || "pending");
-  const currentIdx = Math.max(0, steps.findIndex((s) => s.key === status));
-  const isFailed = status === "basarisiz" || status === "failed";
+  const stepIdx = STEPS.findIndex((s) => s.key === status);
+  const cancelled = ["basarisiz", "failed"].includes(status);
+  const unpaid = ["pending", "odeme_basarisiz"].includes(status);
+  const review = status === "odeme_incelemede";
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12 md:px-6">
-      <h1 className="text-3xl font-bold text-gray-900">Sipariş Özeti</h1>
+    <div className="mx-auto max-w-4xl px-4 py-10 md:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Sipariş #{displayOrderNo(order.id)}</h1>
+          <p className="mt-1 text-sm text-gray-600">{order.createdAt.toLocaleString("tr-TR", { timeZone: "Europe/Istanbul", dateStyle: "long", timeStyle: "short" })}</p>
+        </div>
+        <span className={`inline-flex rounded-full border px-3 py-1 text-sm font-semibold ${statusClass(status)}`}>{CUSTOMER_STATUS_LABELS[status] || status}</span>
+      </div>
 
-      {/* Durum zaman çizelgesi */}
-      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-        <div className="flex items-center justify-between">
-          {steps.map((step, idx) => {
-            const active = idx <= currentIdx && !isFailed;
-            return (
-              <div key={step.key} className="flex-1 flex items-center">
-                <div className={`h-8 w-8 shrink-0 rounded-full border-2 ${active ? "border-emerald-600 bg-emerald-600 text-white" : "border-gray-300 bg-white text-gray-600"} flex items-center justify-center text-xs font-bold`}>{idx+1}</div>
-                {idx < steps.length - 1 && (
-                  <div className={`mx-2 h-1 flex-1 rounded ${active ? "bg-emerald-200" : "bg-gray-200"}`} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-        <div className="mt-3 flex justify-between text-sm text-gray-700">
-          {steps.map((s) => (<div key={s.key}>{s.label}</div>))}
-        </div>
-        {isFailed && (
-          <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-800">
-            <div className="font-semibold">Sipariş Durumu: Başarısız</div>
-            {order as any}
-            {order && (order as any).statusReason ? <div className="text-sm mt-1">Neden: {(order as any).statusReason}</div> : null}
+      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5 sm:p-6">
+        {cancelled ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+            <div className="font-semibold">Bu sipariş iptal edildi.</div>
+            {order.statusReason && <div className="mt-1 text-sm">Açıklama: {order.statusReason}</div>}
           </div>
+        ) : unpaid ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
+            <div className="font-semibold">Bu siparişin ödemesi tamamlanmadı.</div>
+            <div className="mt-1 text-sm">{order.paymentError || "Ödeme alınmadığı için sipariş işleme alınmadı."} Kartınızdan ödeme alınmadı.</div>
+          </div>
+        ) : review ? (
+          <div className="rounded-lg border border-violet-200 bg-violet-50 p-4 text-violet-900">
+            <div className="font-semibold">Ödemeniz kontrol ediliyor.</div>
+            <div className="mt-1 text-sm">Ekibimiz en kısa sürede sizinle iletişime geçecek. Lütfen tekrar ödeme yapmayın.</div>
+          </div>
+        ) : (
+          <ol className="grid grid-cols-4 gap-2">
+            {STEPS.map((s, i) => {
+              const done = i <= stepIdx;
+              return (
+                <li key={s.key} className="flex flex-col items-center text-center">
+                  <div className="flex w-full items-center">
+                    <span className={`h-1 flex-1 rounded ${i === 0 ? "invisible" : done ? "bg-emerald-500" : "bg-gray-200"}`} />
+                    <span className={`mx-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? "bg-emerald-600 text-white" : "bg-gray-200 text-gray-500"}`}>{done ? "✓" : i + 1}</span>
+                    <span className={`h-1 flex-1 rounded ${i === STEPS.length - 1 ? "invisible" : i < stepIdx ? "bg-emerald-500" : "bg-gray-200"}`} />
+                  </div>
+                  <span className={`mt-2 text-xs sm:text-sm ${done ? "font-medium text-gray-900" : "text-gray-500"}`}>{s.label}</span>
+                </li>
+              );
+            })}
+          </ol>
         )}
       </div>
 
-      {/* Özet kutuları */}
-      <div className="mt-6 grid gap-6 md:grid-cols-3">
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <div className="text-sm text-gray-500">Sipariş No</div>
-          <div className="font-semibold">{order.id}</div>
-          <div className="mt-3 text-sm text-gray-500">Tarih</div>
-          <div className="font-medium">{new Date(order.createdAt).toLocaleString("tr-TR")}</div>
-          <div className="mt-3 text-sm text-gray-500">Durum</div>
-          <div className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${isFailed ? "bg-rose-100 text-rose-800" : "bg-emerald-100 text-emerald-800"}`}>{status}</div>
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6">
+          <h2 className="mb-3 font-semibold text-gray-900">Teslimat</h2>
+          <div className="text-sm text-gray-700">
+            <div className="font-medium text-gray-900">{order.customerAd}</div>
+            <div>{order.customerAdres}</div>
+            <div>{order.customerSehir}</div>
+            <div className="mt-2">{order.customerTelefon}</div>
+          </div>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <div className="text-sm text-gray-500">Toplam</div>
-          <div className="text-2xl font-bold text-emerald-700">{order.total.toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}</div>
-          <div className="mt-3 text-sm text-gray-500">Müşteri</div>
-          <div className="font-medium">{order.customerAd}</div>
-          <div className="text-sm text-gray-700">{order.customerEmail} · {order.customerTelefon}</div>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <div className="text-sm text-gray-500">Teslimat Adresi</div>
-          <div className="font-medium">{order.customerAdres}</div>
-          <div className="text-sm text-gray-700">{order.customerSehir}</div>
+        <div className="rounded-xl border border-gray-200 bg-white p-5 sm:p-6">
+          <h2 className="mb-3 font-semibold text-gray-900">Ödeme</h2>
+          <div className="text-sm text-gray-700">
+            <div className="flex justify-between"><span>Tutar</span><span className="font-semibold text-gray-900">{formatTRY(order.total)}</span></div>
+            <div className="mt-1 flex justify-between"><span>Yöntem</span><span>Kredi / Banka Kartı</span></div>
+            {order.paidAt && <div className="mt-1 flex justify-between"><span>Ödeme tarihi</span><span>{order.paidAt.toLocaleString("tr-TR", { timeZone: "Europe/Istanbul", dateStyle: "medium", timeStyle: "short" })}</span></div>}
+          </div>
         </div>
       </div>
 
-      {/* Ürünler */}
-      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Ürünler</h2>
-        <div className="space-y-3">
-          {order.items.map((i) => (
-            <div key={i.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 overflow-hidden rounded bg-white">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imageMap[i.slug] || `/images/${i.slug}.jpg`} alt={nameMap[i.slug] || i.slug} className="h-full w-full object-contain" />
-                </div>
-                <div>
-                  <div className="font-medium text-gray-900">{nameMap[i.slug] || i.slug}</div>
-                  <div className="text-sm text-gray-600">Adet: {i.qty}</div>
-                </div>
+      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5 sm:p-6">
+        <h2 className="mb-3 font-semibold text-gray-900">Ürünler</h2>
+        <ul className="divide-y divide-gray-100">
+          {items.map((i) => (
+            <li key={i.slug} className="flex items-center gap-3 py-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={i.image} alt={i.name} className="h-12 w-12 rounded-lg bg-gray-50 object-contain" />
+              <div className="min-w-0 flex-1 text-sm">
+                <div className="font-medium text-gray-900">{i.name}</div>
+                <div className="text-gray-500">{i.qty} adet</div>
               </div>
-              <div className="text-sm font-medium text-gray-900">
-                {(Number(priceMap[i.slug] || 0) * i.qty).toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}
-              </div>
-            </div>
+              <div className="text-sm font-medium">{i.price != null ? formatTRY(i.price * i.qty) : "-"}</div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </div>
   );
 }
-
-

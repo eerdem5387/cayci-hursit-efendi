@@ -10,7 +10,14 @@ export async function GET() {
         return NextResponse.json({ ok: false, error: "Yetkisiz" }, { status: 401 });
     }
     const row = await prisma.settingKV.findUnique({ where: { key: KEY } });
-    return NextResponse.json({ ok: true, logs: (row as any)?.value || [] });
+    const raw = Array.isArray((row as any)?.value) ? ((row as any).value as any[]) : [];
+    // Eski kayıtlarda mağaza anahtarını içeren "plain" metni ve hash vardı: temizle ve kalıcı olarak sil
+    const dirty = raw.some((l) => l && (l.plain || l.params));
+    const logs = raw.map(({ plain: _p, params: _q, ...rest }: any) => rest);
+    if (dirty) {
+        await prisma.settingKV.update({ where: { key: KEY }, data: { value: logs as any } }).catch(() => {});
+    }
+    return NextResponse.json({ ok: true, logs });
 }
 
 export async function DELETE() {

@@ -1,4 +1,5 @@
 "use client";
+import { ADMIN_STATUS_LABELS, PAID_STATUSES as PAID, statusClass } from "@/lib/orderStatus";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -34,7 +35,7 @@ export default function AdminHome() {
     Promise.all([
       fetch("/api/admin/products").then((r) => r.json()),
       fetch("/api/admin/brands").then((r) => r.json()),
-      fetch("/api/orders?page=1&pageSize=1000").then((r) => r.json()),
+      fetch("/api/orders?page=1&pageSize=1000", { cache: "no-store" }).then((r) => r.json()),
     ]).then(([products, brands, ordersRes]) => {
       const orders = Array.isArray(ordersRes) ? ordersRes : (ordersRes.items || []);
       const lowStock = (products as any[]).filter((p) => {
@@ -42,16 +43,17 @@ export default function AdminHome() {
         return p.stock !== null && p.stock !== undefined && p.stock <= 5;
       }).length;
       const totalRevenue = (orders as any[]).reduce((sum, order) => {
-        // Sadece 'paid' durumundaki siparişlerin gelirini hesapla
-        return order.status === 'paid' ? sum + (order.total || 0) : sum;
+        // Ödemesi alınmış (paid, hazırlanıyor, kargoda, teslim edildi) siparişlerin geliri
+        return PAID.includes(order.status) ? sum + (order.total || 0) : sum;
       }, 0);
       
       // Sipariş durumu istatistikleri
-      const paidOrders = (orders as any[]).filter((o: any) => o.status === 'paid').length;
-      const pendingOrders = (orders as any[]).filter((o: any) => o.status === 'pending').length;
-      const failedOrders = (orders as any[]).filter((o: any) => o.status === 'failed').length;
+      const paidOrders = (orders as any[]).filter((o: any) => PAID.includes(o.status)).length;
+      const pendingOrders = (orders as any[]).filter((o: any) => o.status === 'paid' || o.status === 'odeme_incelemede').length;
+      const failedOrders = (orders as any[]).filter((o: any) => ['odeme_basarisiz', 'basarisiz', 'failed'].includes(o.status)).length;
       
       const recent = (orders as any[])
+        .filter((o: any) => !['pending', 'odeme_basarisiz'].includes(o.status))
         .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
         .slice(0, 5)
         .map((o) => {
@@ -237,16 +239,8 @@ export default function AdminHome() {
                   <div className="font-semibold text-gray-900">
                     {order.total.toLocaleString("tr-TR", { style: "currency", currency: "TRY" })}
                   </div>
-                  <div className={`text-xs px-2 py-1 rounded-full ${
-                    order.status === 'paid' ? 'bg-green-100 text-green-800' :
-                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    order.status === 'failed' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {order.status === 'paid' ? 'Ödendi' :
-                     order.status === 'pending' ? 'Beklemede' :
-                     order.status === 'failed' ? 'Başarısız' :
-                     order.status}
+                  <div className={`text-xs px-2 py-1 rounded-full border ${statusClass(order.status)}`}>
+                    {ADMIN_STATUS_LABELS[order.status] || order.status}
                   </div>
                 </div>
               </div>
@@ -308,7 +302,7 @@ export default function AdminHome() {
           
           <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
             <div>
-              <div className="text-sm text-yellow-600 font-medium">Bekleyen Siparişler</div>
+              <div className="text-sm text-yellow-600 font-medium">Hazırlanacak / İncelenecek</div>
               <div className="text-2xl font-bold text-yellow-700">{kpi?.pendingOrders ?? 0}</div>
             </div>
             <div className="bg-yellow-100 rounded-lg p-2">
@@ -320,7 +314,7 @@ export default function AdminHome() {
           
           <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
             <div>
-              <div className="text-sm text-red-600 font-medium">Başarısız Siparişler</div>
+              <div className="text-sm text-red-600 font-medium">Başarısız / İptal</div>
               <div className="text-2xl font-bold text-red-700">{kpi?.failedOrders ?? 0}</div>
             </div>
             <div className="bg-red-100 rounded-lg p-2">

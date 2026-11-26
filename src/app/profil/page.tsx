@@ -1,13 +1,14 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { CUSTOMER_STATUS_LABELS, displayOrderNo, statusClass } from "@/lib/orderStatus";
 
 type Order = {
   id: string;
   createdAt: string;
   customer: { ad: string; email: string; adres: string; sehir: string; telefon: string };
-  items: { slug: string; qty: number }[];
-  status: "pending" | "paid" | "failed";
+  items: { slug: string; qty: number; name?: string }[];
+  status: string;
 };
 
 export default function ProfilePage() {
@@ -17,13 +18,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (session?.user?.email) {
-      fetch("/api/orders")
+      fetch("/api/orders/mine", { cache: "no-store" })
         .then(r => r.json())
-        .then((allOrders: Order[]) => {
-          // Kullanıcının siparişlerini filtrele
-          const userOrders = allOrders.filter(order => order.customer.email === session.user?.email);
-          setOrders(userOrders);
-        })
+        .then((d) => setOrders(Array.isArray(d?.items) ? d.items : []))
+        .catch(() => setOrders([]))
         .finally(() => setLoading(false));
     }
   }, [session]);
@@ -96,19 +94,14 @@ export default function ProfilePage() {
                   <div key={order.id} className="rounded-lg border border-gray-100 bg-gray-50 p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <div className="font-medium text-gray-900">Sipariş #{order.id.slice(-6)}</div>
+                        <div className="font-medium text-gray-900">Sipariş #{displayOrderNo(order.id)}</div>
                         <div className="text-sm text-gray-600">
                           {new Date(order.createdAt).toLocaleDateString("tr-TR")}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                          order.status === "pending" ? "bg-yellow-100 text-yellow-800" :
-                          order.status === "paid" ? "bg-green-100 text-green-800" :
-                          "bg-red-100 text-red-800"
-                        }`}>
-                          {order.status === "pending" ? "Beklemede" :
-                           order.status === "paid" ? "Ödendi" : "Başarısız"}
+                        <div className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${statusClass(order.status)}`}>
+                          {CUSTOMER_STATUS_LABELS[order.status] || order.status}
                         </div>
                       </div>
                     </div>
@@ -116,7 +109,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       {order.items.map((item, index) => (
                         <div key={index} className="flex items-center justify-between text-sm">
-                          <span className="text-gray-700">{item.slug}</span>
+                          <span className="text-gray-700">{item.name || item.slug}</span>
                           <span className="text-gray-500">Adet: {item.qty}</span>
                         </div>
                       ))}

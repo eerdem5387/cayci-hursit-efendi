@@ -1,43 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { addToCart, CartError, clearCart, ensureCartId, getCartId, readCart, removeFromCart, setCartQty } from "@/lib/cart";
+
+// Ziyaretçiye özel sepet. Kimlik httpOnly çerezdedir; başka birinin sepetine erişilemez.
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-    const items = await prisma.cartItem.findMany();
-    return NextResponse.json(items);
+    const cart = await readCart(await getCartId());
+    return NextResponse.json(cart, { headers: { "Cache-Control": "no-store" } });
+}
+
+async function respond(fn: (cartId: string) => Promise<void>) {
+    try {
+        const cartId = await ensureCartId();
+        await fn(cartId);
+        return NextResponse.json({ ok: true, cart: await readCart(cartId) });
+    } catch (e: any) {
+        const msg = e instanceof CartError ? e.message : "Sepet güncellenemedi";
+        return NextResponse.json({ ok: false, error: msg, cart: await readCart(await getCartId()) }, { status: 400 });
+    }
 }
 
 export async function POST(req: NextRequest) {
-    const { slug, qty } = await req.json();
-    if (!slug || !qty) return NextResponse.json({ ok: false }, { status: 400 });
-    const existing = await prisma.cartItem.findFirst({ where: { slug } });
-    if (!existing) {
-        await prisma.cartItem.create({ data: { slug, qty } });
-    } else {
-        await prisma.cartItem.update({ where: { id: existing.id }, data: { qty: existing.qty + Number(qty) } });
-    }
-    return NextResponse.json({ ok: true });
+    const { slug, qty } = await req.json().catch(() => ({} as any));
+    if (!slug) return NextResponse.json({ ok: false, error: "Ürün belirtilmedi" }, { status: 400 });
+    return respond((id) => addToCart(id, String(slug), qty ?? 1));
 }
 
 export async function PUT(req: NextRequest) {
-    const { slug, qty } = await req.json();
-    const existing = await prisma.cartItem.findFirst({ where: { slug } });
-    if (existing) {
-        await prisma.cartItem.update({ where: { id: existing.id }, data: { qty: Number(qty) } });
-    }
-    return NextResponse.json({ ok: true });
+    const { slug, qty } = await req.json().catch(() => ({} as any));
+    if (!slug) return NextResponse.json({ ok: false, error: "Ürün belirtilmedi" }, { status: 400 });
+    return respond((id) => setCartQty(id, String(slug), qty));
 }
 
 export async function DELETE(req: NextRequest) {
-    const { searchParams } = new URL(req.url);
-    const slug = searchParams.get("slug");
-    if (slug) {
-        const existing = await prisma.cartItem.findFirst({ where: { slug } });
-        if (existing) await prisma.cartItem.delete({ where: { id: existing.id } });
-    } else {
-        // slug verilmezse tüm sepeti temizle
-        await prisma.cartItem.deleteMany();
-    }
-    return NextResponse.json({ ok: true });
+    const slug = new URL(req.url).searchParams.get("slug");
+    return respond((id) => (slug ? removeFromCart(id, slug) : clearCart(id)));
 }
-
-

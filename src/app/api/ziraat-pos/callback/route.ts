@@ -1,136 +1,128 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
-import { getProducts, getSettings } from "@/lib/data";
 import { prisma } from "@/lib/db";
-import { sendMail } from "@/lib/mailer";
-import { renderCustomerOrderEmail, renderOrderConfirmation } from "@/lib/emails";
+import { appendLog, describeFailure, getZiraatConfig, siteUrl, verifyCallbackHash } from "@/lib/ziraat";
+import { notifyAdminReview, onOrderPaid } from "@/lib/orders";
+
+// Bankanın 3D Pay Hosting dönüşü (okUrl ve failUrl aynı adres).
+// Kurallar:
+//  - Sipariş durumu yalnızca imzası doğrulanmış cevapla "paid" olur.
+//  - Bankadan dönen tutar siparişin tutarıyla eşleşmelidir.
+//  - Aynı cevap tekrar gelirse (yenileme, tekrar gönderim) hiçbir şey yeniden yapılmaz.
+//  - Müşteri her durumda gerçek sipariş durumunu gösteren sonuç sayfasına yönlendirilir.
+
+export const dynamic = "force-dynamic";
+
+const LOG_KEY = "ziraatPosDebugLogs";
+
+function pick(data: Record<string, string>, ...keys: string[]) {
+  for (const k of keys) if (data[k]) return data[k];
+  return "";
+}
+
+function resultRedirect(order: { id: string; trackingToken: string | null } | null) {
+  const url = new URL(`${siteUrl()}/odeme/sonuc`);
+  if (order) {
+    url.searchParams.set("siparis", order.id);
+    if (order.trackingToken) url.searchParams.set("t", order.trackingToken);
+  } else {
+    url.searchParams.set("durum", "bilinmiyor");
+  }
+  return NextResponse.redirect(url.toString(), 303);
+}
+
+async function handle(data: Record<string, string>, method: string) {
+  const cfg = await getZiraatConfig();
+  const verified = verifyCallbackHash(data, cfg.storeKey);
+
+  const oid = pick(data, "oid", "OID", "OrderId", "ReturnOid");
+  const mdStatus = pick(data, "mdStatus", "MdStatus");
+  const response = pick(data, "Response", "response");
+  const prc = pick(data, "ProcReturnCode", "procReturnCode");
+  const approved = response.toLowerCase() === "approved" && (prc === "" || prc === "00");
+  const amountRaw = pick(data, "amount", "Amount");
+  const amount = amountRaw ? Number(amountRaw.replace(",", ".")) : NaN;
+  const ref = [pick(data, "TransId"), pick(data, "AuthCode"), pick(data, "HostRefNum")].filter(Boolean).join(" / ");
+
+  const order = oid
+    ? await prisma.order.findUnique({ where: { id: oid }, select: { id: true, status: true, total: true, trackingToken: true } })
+    : null;
+
+  let outcome = "";
+
+  if (!order) {
+    outcome = "siparis_bulunamadi";
+  } else if (approved && verified) {
+    const amountOk = !Number.isFinite(amount) || Math.abs(amount - order.total) < 0.01;
+    if (amountOk) {
+      // Yalnızca ödenmemiş bir siparişten "paid"e geçiş yapılır (idempotent)
+      const res = await prisma.order.updateMany({
+        where: { id: order.id, status: { in: ["pending", "odeme_basarisiz"] } },
+        data: {
+          status: "paid",
+          paidAt: new Date(),
+          paidAmount: Number.isFinite(amount) ? amount : order.total,
+          paymentRef: ref || null,
+          paymentError: null,
+        },
+      });
+      outcome = res.count ? "odendi" : "zaten_islenmis";
+      if (res.count) await onOrderPaid(order.id);
+    } else {
+      const note = `Banka ${amount} TL onayladı, sipariş tutarı ${order.total} TL. Siparişi göndermeden önce banka panelinden kontrol edin.`;
+      const res = await prisma.order.updateMany({
+        where: { id: order.id, status: { in: ["pending", "odeme_basarisiz"] } },
+        data: { status: "odeme_incelemede", paidAmount: amount, paymentRef: ref || null, paymentError: note },
+      });
+      outcome = "tutar_uyusmazligi";
+      if (res.count) await notifyAdminReview(order.id, note);
+    }
+  } else if (approved && !verified) {
+    // Banka onay vermiş görünüyor ama imza doğrulanamadı: ya sahte istek ya da anahtar ayarı hatalı.
+    // Müşteriyi "başarısız" diye yanıltmamak ve parayı kaçırmamak için incelemeye al.
+    const note = "Banka onayı geldi ancak güvenlik imzası doğrulanamadı (storeKey ayarını kontrol edin). Banka panelinden ödemeyi doğrulayın.";
+    const res = await prisma.order.updateMany({
+      where: { id: order.id, status: "pending" },
+      data: { status: "odeme_incelemede", paymentRef: ref || null, paymentError: note },
+    });
+    outcome = "imza_hatali";
+    if (res.count) await notifyAdminReview(order.id, note);
+  } else {
+    const reason = describeFailure(data);
+    await prisma.order.updateMany({
+      where: { id: order.id, status: "pending" },
+      data: { status: "odeme_basarisiz", paymentError: reason },
+    });
+    outcome = "basarisiz";
+  }
+
+  // Teşhis kaydı (kart numarası banka tarafından maskelenmiş olarak gelir)
+  const { HASH: _h1, hash: _h2, ...safeData } = data;
+  await appendLog(LOG_KEY, { ts: Date.now(), method, oid, mdStatus, response, prc, verified, outcome, data: safeData });
+
+  return resultRedirect(order);
+}
 
 export async function POST(req: NextRequest) {
   try {
     const form = await req.formData();
     const data: Record<string, string> = {};
     for (const [k, v] of form.entries()) data[String(k)] = String(v);
-
-    const settings = await getSettings();
-    const storeKey = settings.payments.ziraatPos.storeKey || "";
-
-    // Ver3 dönüş doğrulama (SHA512, alfabetik, kaçış)
-    const mdStatus = data["mdStatus"] || data["MdStatus"] || "";
-    const response = data["Response"] || data["response"] || "";
-    const prc = data["ProcReturnCode"] || data["procReturnCode"] || "";
-    const incomingHash = (data["HASH"] || data["hash"] || "").toString();
-    const keysPost = Object.keys(data).filter((k) => {
-      const lk = k.toLowerCase();
-      return lk !== "hash" && lk !== "encoding" && lk !== "countdown";
-    }).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase(), undefined, { numeric: true, sensitivity: "base" }));
-    const escapedJoinPost = keysPost.map((k) => String(data[k] ?? "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|"))
-      .join("|") + "|" + storeKey.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
-    let verified = false;
-    try {
-      const sha512hex = crypto.createHash("sha512").update(escapedJoinPost, "utf8").digest("hex");
-      const calc = Buffer.from(sha512hex, "hex").toString("base64");
-      verified = !!incomingHash && (incomingHash === calc);
-    } catch { }
-
-    const oid = data["oid"] || data["OID"] || data["OrderId"] || "";
-
-    // Debug log: persist last 50 callback payloads
-    try {
-      const key = "ziraatPosDebugLogs";
-      const row = await prisma.settingKV.findUnique({ where: { key } });
-      const arr = Array.isArray((row as any)?.value) ? ((row as any).value as any[]) : [];
-      arr.unshift({ ts: Date.now(), method: "POST", oid, mdStatus, response, data });
-      const trimmed = arr.slice(0, 50);
-      await prisma.settingKV.upsert({ where: { key }, update: { value: trimmed as any }, create: { key, value: trimmed as any } });
-    } catch { }
-
-    if (verified && (mdStatus === "1") && (response.toLowerCase() === "approved")) {
-      if (oid) {
-        await prisma.order.updateMany({ where: { id: oid }, data: { status: "paid" } });
-        // Müşteriye ödeme onay e-postası gönder
-        try {
-          const order = await prisma.order.findUnique({ where: { id: oid }, include: { items: true } });
-          if (order && order.customerEmail) {
-            const settingsFull = await getSettings();
-            const products = await getProducts();
-            const priceMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.price]));
-            const nameMap = Object.fromEntries((products as any[]).map((p: any) => [p.slug, p.name]));
-            const templOrder: any = {
-              id: order.id,
-              createdAt: order.createdAt.toISOString(),
-              customer: { ad: order.customerAd, email: order.customerEmail, adres: order.customerAdres, sehir: order.customerSehir, telefon: order.customerTelefon },
-              items: order.items.map((i: any) => ({ slug: i.slug, qty: i.qty, name: nameMap[i.slug], price: priceMap[i.slug] })),
-              status: "paid",
-              total: order.total,
-              customerName: order.customerName,
-            };
-            const html = renderCustomerOrderEmail(templOrder, settingsFull);
-            await sendMail(order.customerEmail, "Ödemeniz alındı – Siparişiniz oluşturuldu", html);
-            // Minimal takip linkli teyit
-            await sendMail(order.customerEmail, "Siparişiniz Alındı", renderOrderConfirmation({ orderId: order.id }));
-          }
-        } catch { }
-      }
-      return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=1&mdStatus=${encodeURIComponent(mdStatus)}&resp=${encodeURIComponent(response)}&prc=${encodeURIComponent(prc)}`, 303);
-    }
-
-    // Başarısız ise beklenen redirect
-    const msg = data["ErrMsg"] || data["errmsg"] || "Ödeme doğrulanamadı";
-    return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=0&msg=${encodeURIComponent(msg)}&mdStatus=${encodeURIComponent(mdStatus)}&resp=${encodeURIComponent(response)}&prc=${encodeURIComponent(prc)}`, 303);
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || "Callback error" }, { status: 500 });
+    return await handle(data, "POST");
+  } catch (e) {
+    console.error("ziraat callback failed:", e);
+    return NextResponse.redirect(`${siteUrl()}/odeme/sonuc?durum=bilinmiyor`, 303);
   }
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const url = new URL(req.url);
     const data: Record<string, string> = {};
-    url.searchParams.forEach((v, k) => (data[k] = v));
-
-    const settings = await getSettings();
-    const storeKey = settings.payments.ziraatPos.storeKey || "";
-
-    const mdStatus = data["mdStatus"] || data["MdStatus"] || "";
-    const response = data["Response"] || data["response"] || "";
-    const prc = data["ProcReturnCode"] || data["procReturnCode"] || "";
-    const incomingHash = (data["HASH"] || data["hash"] || "").toString();
-    const keysGet = Object.keys(data).filter((k) => {
-      const lk = k.toLowerCase();
-      return lk !== "hash" && lk !== "encoding" && lk !== "countdown";
-    }).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase(), undefined, { numeric: true, sensitivity: "base" }));
-    const escapedJoinGet = keysGet.map((k) => String(data[k] ?? "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|"))
-      .join("|") + "|" + storeKey.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
-    let verified = false;
-    try {
-      const sha512hex = crypto.createHash("sha512").update(escapedJoinGet, "utf8").digest("hex");
-      const calc = Buffer.from(sha512hex, "hex").toString("base64");
-      verified = !!incomingHash && (incomingHash === calc);
-    } catch { }
-    const oid = data["oid"] || data["OID"] || data["OrderId"] || "";
-
-    // Debug log: persist last 50 callback payloads
-    try {
-      const key = "ziraatPosDebugLogs";
-      const row = await prisma.settingKV.findUnique({ where: { key } });
-      const arr = Array.isArray((row as any)?.value) ? ((row as any).value as any[]) : [];
-      arr.unshift({ ts: Date.now(), method: "GET", oid, mdStatus, response, data });
-      const trimmed = arr.slice(0, 50);
-      await prisma.settingKV.upsert({ where: { key }, update: { value: trimmed as any }, create: { key, value: trimmed as any } });
-    } catch { }
-
-    if (verified && (mdStatus === "1") && (response.toLowerCase() === "approved")) {
-      if (oid) {
-        await prisma.order.updateMany({ where: { id: oid }, data: { status: "paid" } });
-      }
-      return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=1&mdStatus=${encodeURIComponent(mdStatus)}&resp=${encodeURIComponent(response)}&prc=${encodeURIComponent(prc)}`, 303);
-    }
-
-    const msg = data["ErrMsg"] || data["errmsg"] || "Ödeme doğrulanamadı";
-    return NextResponse.redirect((process.env.NEXT_PUBLIC_SITE_URL || "https://www.caycihursitefendi.com") + `/tesekkurler?oid=${encodeURIComponent(oid)}&paid=0&msg=${encodeURIComponent(msg)}&mdStatus=${encodeURIComponent(mdStatus)}&resp=${encodeURIComponent(response)}&prc=${encodeURIComponent(prc)}`, 303);
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || "Callback error" }, { status: 500 });
+    new URL(req.url).searchParams.forEach((v, k) => (data[k] = v));
+    // Parametresiz GET (ör. kullanıcı adresi yeniledi) → sonuç sayfası
+    if (!Object.keys(data).length) return NextResponse.redirect(`${siteUrl()}/odeme/sonuc?durum=bilinmiyor`, 303);
+    return await handle(data, "GET");
+  } catch (e) {
+    console.error("ziraat callback failed:", e);
+    return NextResponse.redirect(`${siteUrl()}/odeme/sonuc?durum=bilinmiyor`, 303);
   }
 }
-
-

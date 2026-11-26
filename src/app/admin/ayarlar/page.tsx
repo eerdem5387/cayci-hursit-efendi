@@ -103,6 +103,8 @@ export default function SettingsPage() {
                   <th className="py-1 pr-2">mdStatus</th>
                   <th className="py-1 pr-2">Response</th>
                   <th className="py-1 pr-2">ProcCode</th>
+                  <th className="py-1 pr-2">İmza</th>
+                  <th className="py-1 pr-2">Sonuç</th>
                   <th className="py-1">Mesaj</th>
                 </tr>
               </thead>
@@ -115,6 +117,8 @@ export default function SettingsPage() {
                     <td className="py-1 pr-2">{l.mdStatus || l.data?.mdStatus || l.data?.MdStatus || ""}</td>
                     <td className="py-1 pr-2">{l.response || l.data?.Response || l.data?.response || ""}</td>
                     <td className="py-1 pr-2">{l.data?.ProcReturnCode || l.data?.procReturnCode || ""}</td>
+                    <td className="py-1 pr-2">{l.verified === undefined ? "" : l.verified ? "✓" : "✗"}</td>
+                    <td className="py-1 pr-2">{l.outcome || ""}</td>
                     <td className="py-1">{l.data?.ErrMsg || l.data?.errmsg || ""}</td>
                   </tr>
                 ))}
@@ -143,7 +147,6 @@ export default function SettingsPage() {
                   <th className="py-1 pr-2">Oid</th>
                   <th className="py-1 pr-2">Tutar</th>
                   <th className="py-1 pr-2">Algoritma</th>
-                  <th className="py-1 pr-2">Plain</th>
                 </tr>
               </thead>
               <tbody>
@@ -152,8 +155,7 @@ export default function SettingsPage() {
                     <td className="py-1 pr-2">{new Date(l.ts).toLocaleString("tr-TR")}</td>
                     <td className="py-1 pr-2">{l.oid}</td>
                     <td className="py-1 pr-2">{l.amount}</td>
-                    <td className="py-1 pr-2">{l.hashAlgo}</td>
-                    <td className="py-1 pr-2 break-all whitespace-pre-wrap">{l.plain}</td>
+                    <td className="py-1 pr-2">{l.hashAlgo || l.algo}</td>
                   </tr>
                 ))}
               </tbody>
