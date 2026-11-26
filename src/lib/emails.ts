@@ -11,6 +11,8 @@ export type EmailOrder = {
   customer: { ad: string; email: string; adres: string; sehir: string; telefon: string };
   items: { slug: string; qty: number; name?: string | null; price?: number | null }[];
   paymentError?: string | null;
+  cargoCompany?: string | null;
+  cargoTrackingNo?: string | null;
 };
 
 export function trackingUrlFor(order: { id: string; trackingToken?: string | null }) {
@@ -125,11 +127,19 @@ export function renderCustomerOrderStatusEmail(
     params.status === "basarisiz" && params.reason
       ? `<div class="box" style="background:#fef2f2;color:#991b1b;border:1px solid #fecaca"><strong>Açıklama:</strong> ${esc(params.reason)}</div>`
       : "";
+  const cargoBlock =
+    params.status === "kargoda" && (order.cargoCompany || order.cargoTrackingNo)
+      ? `<div class="box" style="background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0">
+           ${order.cargoCompany ? `<strong>Kargo firması:</strong> ${esc(order.cargoCompany)}<br/>` : ""}
+           ${order.cargoTrackingNo ? `<strong>Takip numarası:</strong> ${esc(order.cargoTrackingNo)}` : ""}
+         </div>`
+      : "";
   return layout(
     `${human[params.status]} – #${displayOrderNo(order.id)}`,
     `<p>Merhaba ${esc(order.customer.ad)},</p>
      <p>#${displayOrderNo(order.id)} numaralı siparişinizin durumu güncellendi: <strong>${human[params.status]}</strong>.</p>
      ${reasonBlock}
+     ${cargoBlock}
      ${itemsTable(order)}
      <p style="margin-top:16px"><a class="cta" href="${trackingUrlFor(order)}">Siparişimi Takip Et</a></p>`,
     `Teşekkür ederiz. ${title}`

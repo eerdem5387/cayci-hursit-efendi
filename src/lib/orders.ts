@@ -47,6 +47,8 @@ export async function toEmailOrder(order: OrderWithItems): Promise<EmailOrder> {
     },
     items: items.map((i) => ({ slug: i.slug, qty: i.qty, name: i.name, price: i.price })),
     paymentError: order.paymentError,
+    cargoCompany: order.cargoCompany,
+    cargoTrackingNo: order.cargoTrackingNo,
   };
 }
 
@@ -101,6 +103,10 @@ export async function serializeOrder(order: OrderWithItems, opts: { includeConta
     paymentRef: order.paymentRef,
     paymentError: order.paymentError,
     statusReason: order.statusReason,
+    cargoCompany: order.cargoCompany,
+    cargoTrackingNo: order.cargoTrackingNo,
+    adminNote: order.adminNote,
+    history: Array.isArray(order.history) ? (order.history as any[]) : [],
     customerName: order.customerName,
     customer: opts.includeContact === false
       ? undefined

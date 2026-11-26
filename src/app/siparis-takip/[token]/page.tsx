@@ -80,6 +80,12 @@ export default async function OrderTrackPage({ params }: { params: Promise<{ tok
             })}
           </ol>
         )}
+        {(status === "kargoda" || status === "teslim_edildi") && (order.cargoCompany || order.cargoTrackingNo) && (
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            {order.cargoCompany && <div><span className="text-blue-700">Kargo firması:</span> <strong>{order.cargoCompany}</strong></div>}
+            {order.cargoTrackingNo && <div><span className="text-blue-700">Takip numarası:</span> <strong className="font-mono">{order.cargoTrackingNo}</strong></div>}
+          </div>
+        )}
       </div>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">

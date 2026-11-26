@@ -88,3 +88,49 @@ export function displayOrderNo(id: string) {
 export function formatTRY(n: number) {
   return (Number(n) || 0).toLocaleString("tr-TR", { style: "currency", currency: "TRY" });
 }
+
+/** Yönetim panelindeki iş akışı sekmeleri */
+export const ADMIN_TABS: { key: string; label: string; statuses: string[]; hint: string; alert?: boolean }[] = [
+  { key: "yeni", label: "Yeni", statuses: ["paid"], hint: "Ödemesi alındı, hazırlanmayı bekliyor." },
+  { key: "hazirlaniyor", label: "Hazırlanıyor", statuses: ["onaylandi"], hint: "Paketleniyor; kargoya verildiğinde takip numarasını girin." },
+  { key: "kargoda", label: "Kargoda", statuses: ["kargoda"], hint: "Müşteriye ulaştığında “Teslim Edildi” yapın." },
+  { key: "teslim", label: "Teslim Edildi", statuses: ["teslim_edildi"], hint: "Tamamlanan siparişler." },
+  { key: "inceleme", label: "İnceleme", statuses: ["odeme_incelemede"], hint: "Banka onayı ile sipariş tutarı/imzası tutmadı. Banka panelinden kontrol edin.", alert: true },
+  { key: "iptal", label: "İptal", statuses: ["basarisiz", "failed"], hint: "İptal edilen siparişler." },
+  { key: "odenmemis", label: "Ödenmemiş", statuses: ["pending", "odeme_basarisiz"], hint: "Ödemesi tamamlanmamış denemeler. Bunlar sipariş değildir, kargolanmamalıdır." },
+  { key: "tumu", label: "Tümü", statuses: [], hint: "" },
+];
+
+/** Bir sonraki iş adımı */
+export const NEXT_ACTION: Record<string, { to: string; label: string }> = {
+  paid: { to: "onaylandi", label: "Hazırlamaya Başla" },
+  onaylandi: { to: "kargoda", label: "Kargoya Ver" },
+  kargoda: { to: "teslim_edildi", label: "Teslim Edildi" },
+};
+
+export const CARGO_COMPANIES = [
+  "Yurtiçi Kargo",
+  "Aras Kargo",
+  "MNG Kargo",
+  "PTT Kargo",
+  "Sürat Kargo",
+  "Hepsijet",
+  "Kolay Gelsin",
+  "UPS",
+  "DHL",
+  "Diğer",
+];
+
+/** "3 saat önce" gibi göreli zaman */
+export function timeAgo(date: string | Date) {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const s = Math.round((Date.now() - d.getTime()) / 1000);
+  if (s < 60) return "az önce";
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m} dk önce`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} saat önce`;
+  const g = Math.round(h / 24);
+  if (g < 30) return `${g} gün önce`;
+  return d.toLocaleDateString("tr-TR");
+}

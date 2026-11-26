@@ -302,7 +302,7 @@ export default function AdminHome() {
           
           <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
             <div>
-              <div className="text-sm text-yellow-600 font-medium">Hazırlanacak / İncelenecek</div>
+              <Link href="/admin/siparisler?sekme=yeni" className="text-sm text-yellow-600 font-medium hover:underline">Hazırlanacak / İncelenecek →</Link>
               <div className="text-2xl font-bold text-yellow-700">{kpi?.pendingOrders ?? 0}</div>
             </div>
             <div className="bg-yellow-100 rounded-lg p-2">

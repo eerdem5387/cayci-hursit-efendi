@@ -49,6 +49,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PageTransition from "@/components/PageTransition";
 import { Providers } from "./providers";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 export default function RootLayout({
   children,
@@ -64,17 +65,7 @@ export default function RootLayout({
             <PageTransition>{children}</PageTransition>
           </main>
           <Footer />
-          {/* Floating WhatsApp button */}
-          <a
-            href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP?.replace(/[^\d]/g, "") || "905555555555"}?text=${encodeURIComponent("Merhaba, destek almak istiyorum.")}`}
-            className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-40 inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-3 text-white shadow-lg transition-colors hover:bg-emerald-700 active:bg-emerald-800 touch-manipulation"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="WhatsApp Destek"
-          >
-            <img src="/images/whatsapp.svg" alt="WhatsApp" className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="hidden sm:inline text-sm font-medium">WhatsApp</span>
-          </a>
+          <WhatsAppButton />
         </Providers>
       </body>
     </html>

@@ -45,7 +45,7 @@ export default function Header() {
 
   const isHome = pathname === "/";
   return (
-    <header className={isHome ? "absolute inset-x-0 top-0 z-50 w-full border-b border-white/10 bg-[#194A33] backdrop-blur-sm" : "sticky top-0 z-50 w-full border-b border-gray-200 bg-[#194A33] backdrop-blur"}>
+    <header className={`print:hidden ${isHome ? "absolute inset-x-0 top-0 z-50 w-full border-b border-white/10 bg-[#194A33] backdrop-blur-sm" : "sticky top-0 z-50 w-full border-b border-gray-200 bg-[#194A33] backdrop-blur"}`}>
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 md:py-5 lg:py-6">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>

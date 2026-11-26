@@ -74,6 +74,12 @@ model Order {
   paymentRef    String?
   paymentError  String?
   statusReason  String?
+  /// Yönetim
+  cargoCompany  String?
+  cargoTrackingNo String?
+  adminNote     String?
+  /// [{ at, status, note? }] – panelden yapılan durum değişiklikleri
+  history       Json?
 }
 
 model OrderItem {
